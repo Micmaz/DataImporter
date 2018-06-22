@@ -12,11 +12,16 @@ Save a config file then call it like :
 Or call it with coder like:
 ```C#
                 String filename = Server.MapPath(".") + "/" + testul.uploadPath + "/" + afilename;
+                
                     var da = new DataImporter.DataImporter();
-                    da.readConfigs(Server.MapPath("RecordImport.config"));
+                    da.readConfigs(Server.MapPath("Import.config"));
                     da.fileName = filename;
-                    da.connectionString = sqlHelper.defaultConnection.ConnectionString;
+                    
+                    //Set the connection string Using the one in web.config
+                    da.connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString;
                     da.UploadTableFilename();
-                    lblResults.Text += da.statusList.Replace("\n", "<br/>");
-                    lblResults.Text += da.errorList.Replace("\n", "<br/>");
+                    
+                    //Save the reuslts to a single string. Will give inserted, updated and deleted record count.
+                    var results = da.statusList.Replace("\n", "<br/>");
+                    results += da.errorList.Replace("\n", "<br/>");
 ```
