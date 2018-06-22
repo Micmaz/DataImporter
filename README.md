@@ -19,7 +19,7 @@ Or call it with coder like:
                     
                     //Set the connection string Using the one in web.config
                     di.connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString;
-                    di.UploadTableFilename();
+                    di.Import();
                     
                     //Save the reuslts to a single string. Will give inserted, updated and deleted record count.
                     var results = di.statusList.Replace("\n", "<br/>");
