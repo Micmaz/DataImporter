@@ -13,15 +13,15 @@ Or call it with coder like:
 ```C#
                 String filename = Server.MapPath(".") + "/" + testul.uploadPath + "/" + afilename;
                 
-                    var da = new DataImporter.DataImporter();
-                    da.readConfigs(Server.MapPath("Import.config"));
-                    da.fileName = filename;
+                    var di = new DataImporter.DataImporter();
+                    di.readConfigs(Server.MapPath("Import.config"));
+                    di.fileName = filename;
                     
                     //Set the connection string Using the one in web.config
-                    da.connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString;
-                    da.UploadTableFilename();
+                    di.connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString;
+                    di.UploadTableFilename();
                     
                     //Save the reuslts to a single string. Will give inserted, updated and deleted record count.
-                    var results = da.statusList.Replace("\n", "<br/>");
-                    results += da.errorList.Replace("\n", "<br/>");
+                    var results = di.statusList.Replace("\n", "<br/>");
+                    results += di.errorList.Replace("\n", "<br/>");
 ```
