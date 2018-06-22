@@ -11,7 +11,7 @@ Save a config file then call it like :
 
 Or call it with coder like:
 ```C#
-                String filename = Server.MapPath(".") + "/" + testul.uploadPath + "/" + afilename;
+                    String filename = Server.MapPath(".") + "/" + testul.uploadPath + "/" + afilename;
                 
                     var di = new DataImporter.DataImporter();
                     di.readConfigs(Server.MapPath("Import.config"));
