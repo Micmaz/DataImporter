@@ -43,7 +43,6 @@ Partial Class FormBetter
 		Me.lblRunInfo = New System.Windows.Forms.Label()
 		Me.Label7 = New System.Windows.Forms.Label()
 		Me.tbProcessTable = New System.Windows.Forms.TextBox()
-		Me.Label8 = New System.Windows.Forms.Label()
 		Me.tbDelimiter = New System.Windows.Forms.TextBox()
 		Me.Label9 = New System.Windows.Forms.Label()
 		Me.tbColList = New System.Windows.Forms.TextBox()
@@ -71,18 +70,23 @@ Partial Class FormBetter
 		Me.ddFileType = New System.Windows.Forms.ComboBox()
 		Me.Label16 = New System.Windows.Forms.Label()
 		Me.Button4 = New System.Windows.Forms.Button()
-		Me.Label17 = New System.Windows.Forms.Label()
 		Me.tbRegex = New System.Windows.Forms.TextBox()
 		Me.Label18 = New System.Windows.Forms.Label()
 		Me.tbDateFormat = New System.Windows.Forms.TextBox()
 		Me.TabControl1 = New System.Windows.Forms.TabControl()
 		Me.TabPage1 = New System.Windows.Forms.TabPage()
-		Me.btnTestExcel = New System.Windows.Forms.Button()
-		Me.Label22 = New System.Windows.Forms.Label()
+		Me.gbExcel = New System.Windows.Forms.GroupBox()
 		Me.Label21 = New System.Windows.Forms.Label()
 		Me.tbWorkbookNum = New System.Windows.Forms.TextBox()
+		Me.Label22 = New System.Windows.Forms.Label()
+		Me.btnTestExcel = New System.Windows.Forms.Button()
+		Me.gbDelimiters = New System.Windows.Forms.GroupBox()
+		Me.gbRegex = New System.Windows.Forms.GroupBox()
+		Me.Label17 = New System.Windows.Forms.Label()
 		Me.Label20 = New System.Windows.Forms.Label()
 		Me.TabPage2 = New System.Windows.Forms.TabPage()
+		Me.Label24 = New System.Windows.Forms.Label()
+		Me.Label23 = New System.Windows.Forms.Label()
 		Me.ddConnectionType = New System.Windows.Forms.ComboBox()
 		Me.cbDeleteFirst = New System.Windows.Forms.CheckBox()
 		Me.cbCreateTable = New System.Windows.Forms.CheckBox()
@@ -92,10 +96,12 @@ Partial Class FormBetter
 		Me.Button6 = New System.Windows.Forms.Button()
 		Me.Button5 = New System.Windows.Forms.Button()
 		Me.TabPage4 = New System.Windows.Forms.TabPage()
-		Me.Label23 = New System.Windows.Forms.Label()
-		Me.Label24 = New System.Windows.Forms.Label()
+		Me.cbShowStack = New System.Windows.Forms.CheckBox()
 		Me.TabControl1.SuspendLayout()
 		Me.TabPage1.SuspendLayout()
+		Me.gbExcel.SuspendLayout()
+		Me.gbDelimiters.SuspendLayout()
+		Me.gbRegex.SuspendLayout()
 		Me.TabPage2.SuspendLayout()
 		Me.TabPage3.SuspendLayout()
 		Me.TabPage4.SuspendLayout()
@@ -260,22 +266,13 @@ Partial Class FormBetter
 		Me.tbProcessTable.Size = New System.Drawing.Size(409, 20)
 		Me.tbProcessTable.TabIndex = 16
 		'
-		'Label8
-		'
-		Me.Label8.AutoSize = True
-		Me.Label8.Location = New System.Drawing.Point(36, 113)
-		Me.Label8.Name = "Label8"
-		Me.Label8.Size = New System.Drawing.Size(50, 13)
-		Me.Label8.TabIndex = 19
-		Me.Label8.Text = "Delimiter:"
-		'
 		'tbDelimiter
 		'
-		Me.tbDelimiter.Location = New System.Drawing.Point(92, 110)
+		Me.tbDelimiter.Location = New System.Drawing.Point(6, 19)
 		Me.tbDelimiter.Name = "tbDelimiter"
 		Me.tbDelimiter.Size = New System.Drawing.Size(26, 20)
 		Me.tbDelimiter.TabIndex = 18
-		Me.tbDelimiter.Text = "TAB"
+		Me.tbDelimiter.Text = ","
 		'
 		'Label9
 		'
@@ -296,7 +293,7 @@ Partial Class FormBetter
 		'Label10
 		'
 		Me.Label10.AutoSize = True
-		Me.Label10.Location = New System.Drawing.Point(27, 87)
+		Me.Label10.Location = New System.Drawing.Point(27, 73)
 		Me.Label10.Name = "Label10"
 		Me.Label10.Size = New System.Drawing.Size(53, 13)
 		Me.Label10.TabIndex = 23
@@ -304,7 +301,7 @@ Partial Class FormBetter
 		'
 		'tbSkipRows
 		'
-		Me.tbSkipRows.Location = New System.Drawing.Point(92, 84)
+		Me.tbSkipRows.Location = New System.Drawing.Point(92, 70)
 		Me.tbSkipRows.Name = "tbSkipRows"
 		Me.tbSkipRows.Size = New System.Drawing.Size(26, 20)
 		Me.tbSkipRows.TabIndex = 22
@@ -313,7 +310,7 @@ Partial Class FormBetter
 		'Label11
 		'
 		Me.Label11.AutoSize = True
-		Me.Label11.Location = New System.Drawing.Point(121, 87)
+		Me.Label11.Location = New System.Drawing.Point(121, 73)
 		Me.Label11.Name = "Label11"
 		Me.Label11.Size = New System.Drawing.Size(34, 13)
 		Me.Label11.TabIndex = 24
@@ -350,7 +347,7 @@ Partial Class FormBetter
 		'Label12
 		'
 		Me.Label12.AutoSize = True
-		Me.Label12.Location = New System.Drawing.Point(124, 113)
+		Me.Label12.Location = New System.Drawing.Point(38, 22)
 		Me.Label12.Name = "Label12"
 		Me.Label12.Size = New System.Drawing.Size(135, 13)
 		Me.Label12.TabIndex = 27
@@ -434,18 +431,18 @@ Partial Class FormBetter
 		'
 		Me.cbQuietMode.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
 		Me.cbQuietMode.AutoSize = True
-		Me.cbQuietMode.Location = New System.Drawing.Point(114, 535)
+		Me.cbQuietMode.Location = New System.Drawing.Point(114, 527)
 		Me.cbQuietMode.Name = "cbQuietMode"
-		Me.cbQuietMode.Size = New System.Drawing.Size(176, 17)
+		Me.cbQuietMode.Size = New System.Drawing.Size(296, 17)
 		Me.cbQuietMode.TabIndex = 37
-		Me.cbQuietMode.Text = "Quiet mode (command line only)"
+		Me.cbQuietMode.Text = "Quiet mode (command line only, suppresses progress bar)"
 		Me.cbQuietMode.UseVisualStyleBackColor = True
 		'
 		'cbWindowMode
 		'
 		Me.cbWindowMode.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
 		Me.cbWindowMode.AutoSize = True
-		Me.cbWindowMode.Location = New System.Drawing.Point(114, 513)
+		Me.cbWindowMode.Location = New System.Drawing.Point(114, 511)
 		Me.cbWindowMode.Name = "cbWindowMode"
 		Me.cbWindowMode.Size = New System.Drawing.Size(183, 17)
 		Me.cbWindowMode.TabIndex = 38
@@ -502,21 +499,15 @@ Partial Class FormBetter
 		Me.Button4.Text = "Preview Data"
 		Me.Button4.UseVisualStyleBackColor = True
 		'
-		'Label17
-		'
-		Me.Label17.AutoSize = True
-		Me.Label17.Location = New System.Drawing.Point(5, 181)
-		Me.Label17.Name = "Label17"
-		Me.Label17.Size = New System.Drawing.Size(81, 13)
-		Me.Label17.TabIndex = 44
-		Me.Label17.Text = "Regex Capture:"
-		'
 		'tbRegex
 		'
-		Me.tbRegex.Location = New System.Drawing.Point(92, 178)
+		Me.tbRegex.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+			Or System.Windows.Forms.AnchorStyles.Left) _
+			Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+		Me.tbRegex.Location = New System.Drawing.Point(6, 19)
 		Me.tbRegex.Multiline = True
 		Me.tbRegex.Name = "tbRegex"
-		Me.tbRegex.Size = New System.Drawing.Size(289, 92)
+		Me.tbRegex.Size = New System.Drawing.Size(568, 99)
 		Me.tbRegex.TabIndex = 43
 		'
 		'Label18
@@ -552,21 +543,15 @@ Partial Class FormBetter
 		'
 		'TabPage1
 		'
-		Me.TabPage1.Controls.Add(Me.btnTestExcel)
-		Me.TabPage1.Controls.Add(Me.Label22)
-		Me.TabPage1.Controls.Add(Me.Label21)
-		Me.TabPage1.Controls.Add(Me.tbWorkbookNum)
+		Me.TabPage1.Controls.Add(Me.gbExcel)
+		Me.TabPage1.Controls.Add(Me.gbDelimiters)
+		Me.TabPage1.Controls.Add(Me.gbRegex)
 		Me.TabPage1.Controls.Add(Me.Label20)
 		Me.TabPage1.Controls.Add(Me.tbFileName)
 		Me.TabPage1.Controls.Add(Me.Label1)
 		Me.TabPage1.Controls.Add(Me.btnBrowse)
-		Me.TabPage1.Controls.Add(Me.Label17)
-		Me.TabPage1.Controls.Add(Me.tbRegex)
-		Me.TabPage1.Controls.Add(Me.tbDelimiter)
-		Me.TabPage1.Controls.Add(Me.Label8)
 		Me.TabPage1.Controls.Add(Me.Label16)
 		Me.TabPage1.Controls.Add(Me.ddFileType)
-		Me.TabPage1.Controls.Add(Me.Label12)
 		Me.TabPage1.Controls.Add(Me.Label10)
 		Me.TabPage1.Controls.Add(Me.tbBatchSize)
 		Me.TabPage1.Controls.Add(Me.Label6)
@@ -580,9 +565,49 @@ Partial Class FormBetter
 		Me.TabPage1.Text = "Source"
 		Me.TabPage1.UseVisualStyleBackColor = True
 		'
+		'gbExcel
+		'
+		Me.gbExcel.Controls.Add(Me.Label21)
+		Me.gbExcel.Controls.Add(Me.tbWorkbookNum)
+		Me.gbExcel.Controls.Add(Me.Label22)
+		Me.gbExcel.Controls.Add(Me.btnTestExcel)
+		Me.gbExcel.Location = New System.Drawing.Point(9, 149)
+		Me.gbExcel.Name = "gbExcel"
+		Me.gbExcel.Size = New System.Drawing.Size(596, 100)
+		Me.gbExcel.TabIndex = 52
+		Me.gbExcel.TabStop = False
+		Me.gbExcel.Text = "Excel Options"
+		'
+		'Label21
+		'
+		Me.Label21.AutoSize = True
+		Me.Label21.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
+		Me.Label21.Location = New System.Drawing.Point(6, 29)
+		Me.Label21.Name = "Label21"
+		Me.Label21.Size = New System.Drawing.Size(80, 13)
+		Me.Label21.TabIndex = 47
+		Me.Label21.Text = "Workbook num"
+		'
+		'tbWorkbookNum
+		'
+		Me.tbWorkbookNum.Location = New System.Drawing.Point(9, 45)
+		Me.tbWorkbookNum.Name = "tbWorkbookNum"
+		Me.tbWorkbookNum.Size = New System.Drawing.Size(26, 20)
+		Me.tbWorkbookNum.TabIndex = 46
+		Me.tbWorkbookNum.Text = "-1"
+		'
+		'Label22
+		'
+		Me.Label22.AutoSize = True
+		Me.Label22.Location = New System.Drawing.Point(41, 48)
+		Me.Label22.Name = "Label22"
+		Me.Label22.Size = New System.Drawing.Size(133, 13)
+		Me.Label22.TabIndex = 48
+		Me.Label22.Text = "(-1 to import all workbooks)"
+		'
 		'btnTestExcel
 		'
-		Me.btnTestExcel.Location = New System.Drawing.Point(663, 181)
+		Me.btnTestExcel.Location = New System.Drawing.Point(271, 42)
 		Me.btnTestExcel.Name = "btnTestExcel"
 		Me.btnTestExcel.Size = New System.Drawing.Size(75, 23)
 		Me.btnTestExcel.TabIndex = 49
@@ -590,32 +615,39 @@ Partial Class FormBetter
 		Me.btnTestExcel.UseVisualStyleBackColor = True
 		Me.btnTestExcel.Visible = False
 		'
-		'Label22
+		'gbDelimiters
 		'
-		Me.Label22.AutoSize = True
-		Me.Label22.Location = New System.Drawing.Point(124, 139)
-		Me.Label22.Name = "Label22"
-		Me.Label22.Size = New System.Drawing.Size(133, 13)
-		Me.Label22.TabIndex = 48
-		Me.Label22.Text = "(-1 to import all workbooks)"
+		Me.gbDelimiters.Controls.Add(Me.tbDelimiter)
+		Me.gbDelimiters.Controls.Add(Me.Label12)
+		Me.gbDelimiters.Location = New System.Drawing.Point(9, 96)
+		Me.gbDelimiters.Name = "gbDelimiters"
+		Me.gbDelimiters.Size = New System.Drawing.Size(596, 49)
+		Me.gbDelimiters.TabIndex = 51
+		Me.gbDelimiters.TabStop = False
+		Me.gbDelimiters.Text = "Delimiters"
 		'
-		'Label21
+		'gbRegex
 		'
-		Me.Label21.AutoSize = True
-		Me.Label21.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
-		Me.Label21.Location = New System.Drawing.Point(5, 136)
-		Me.Label21.Name = "Label21"
-		Me.Label21.Size = New System.Drawing.Size(80, 26)
-		Me.Label21.TabIndex = 47
-		Me.Label21.Text = "Excel Import " & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "Workbook num"
+		Me.gbRegex.Controls.Add(Me.Label17)
+		Me.gbRegex.Controls.Add(Me.tbRegex)
+		Me.gbRegex.Location = New System.Drawing.Point(9, 255)
+		Me.gbRegex.Name = "gbRegex"
+		Me.gbRegex.Size = New System.Drawing.Size(596, 173)
+		Me.gbRegex.TabIndex = 50
+		Me.gbRegex.TabStop = False
+		Me.gbRegex.Text = "Regular Expression"
 		'
-		'tbWorkbookNum
+		'Label17
 		'
-		Me.tbWorkbookNum.Location = New System.Drawing.Point(92, 136)
-		Me.tbWorkbookNum.Name = "tbWorkbookNum"
-		Me.tbWorkbookNum.Size = New System.Drawing.Size(26, 20)
-		Me.tbWorkbookNum.TabIndex = 46
-		Me.tbWorkbookNum.Text = "-1"
+		Me.Label17.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+		Me.Label17.AutoSize = True
+		Me.Label17.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
+		Me.Label17.Location = New System.Drawing.Point(6, 121)
+		Me.Label17.Name = "Label17"
+		Me.Label17.Size = New System.Drawing.Size(475, 39)
+		Me.Label17.TabIndex = 48
+		Me.Label17.Text = "Ex (named capture is the input Column Name): " & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "\s(?<IDNumber>\d\d\w\w\s\d\d\d\d" &
+	"\d\d)\s\s(?<name>.{26})(?<citation>.{7})\s\s\s(?<Date>.{6})"
 		'
 		'Label20
 		'
@@ -655,6 +687,24 @@ Partial Class FormBetter
 		Me.TabPage2.TabIndex = 1
 		Me.TabPage2.Text = "Destination"
 		Me.TabPage2.UseVisualStyleBackColor = True
+		'
+		'Label24
+		'
+		Me.Label24.AutoSize = True
+		Me.Label24.Location = New System.Drawing.Point(594, 125)
+		Me.Label24.Name = "Label24"
+		Me.Label24.Size = New System.Drawing.Size(112, 13)
+		Me.Label24.TabIndex = 54
+		Me.Label24.Text = "Comma Delimited Lists"
+		'
+		'Label23
+		'
+		Me.Label23.AutoSize = True
+		Me.Label23.Location = New System.Drawing.Point(47, 160)
+		Me.Label23.Name = "Label23"
+		Me.Label23.Size = New System.Drawing.Size(313, 13)
+		Me.Label23.TabIndex = 53
+		Me.Label23.Text = "Unique Identifiers indicate which rows will be updated vs inserted"
 		'
 		'ddConnectionType
 		'
@@ -757,29 +807,23 @@ Partial Class FormBetter
 		Me.TabPage4.Text = "Help"
 		Me.TabPage4.UseVisualStyleBackColor = True
 		'
-		'Label23
+		'cbShowStack
 		'
-		Me.Label23.AutoSize = True
-		Me.Label23.Location = New System.Drawing.Point(47, 160)
-		Me.Label23.Name = "Label23"
-		Me.Label23.Size = New System.Drawing.Size(313, 13)
-		Me.Label23.TabIndex = 53
-		Me.Label23.Text = "Unique Identifiers indicate which rows will be updated vs inserted"
-		'
-		'Label24
-		'
-		Me.Label24.AutoSize = True
-		Me.Label24.Location = New System.Drawing.Point(594, 125)
-		Me.Label24.Name = "Label24"
-		Me.Label24.Size = New System.Drawing.Size(112, 13)
-		Me.Label24.TabIndex = 54
-		Me.Label24.Text = "Comma Delimited Lists"
+		Me.cbShowStack.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+		Me.cbShowStack.AutoSize = True
+		Me.cbShowStack.Location = New System.Drawing.Point(114, 542)
+		Me.cbShowStack.Name = "cbShowStack"
+		Me.cbShowStack.Size = New System.Drawing.Size(148, 17)
+		Me.cbShowStack.TabIndex = 48
+		Me.cbShowStack.Text = "Show Stacktrace in errors"
+		Me.cbShowStack.UseVisualStyleBackColor = True
 		'
 		'FormBetter
 		'
 		Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
 		Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
 		Me.ClientSize = New System.Drawing.Size(881, 563)
+		Me.Controls.Add(Me.cbShowStack)
 		Me.Controls.Add(Me.TabControl1)
 		Me.Controls.Add(Me.Button4)
 		Me.Controls.Add(Me.cbWindowMode)
@@ -792,6 +836,12 @@ Partial Class FormBetter
 		Me.TabControl1.ResumeLayout(False)
 		Me.TabPage1.ResumeLayout(False)
 		Me.TabPage1.PerformLayout()
+		Me.gbExcel.ResumeLayout(False)
+		Me.gbExcel.PerformLayout()
+		Me.gbDelimiters.ResumeLayout(False)
+		Me.gbDelimiters.PerformLayout()
+		Me.gbRegex.ResumeLayout(False)
+		Me.gbRegex.PerformLayout()
 		Me.TabPage2.ResumeLayout(False)
 		Me.TabPage2.PerformLayout()
 		Me.TabPage3.ResumeLayout(False)
@@ -821,7 +871,6 @@ Partial Class FormBetter
 	Friend WithEvents lblRunInfo As System.Windows.Forms.Label
 	Friend WithEvents Label7 As System.Windows.Forms.Label
 	Friend WithEvents tbProcessTable As System.Windows.Forms.TextBox
-	Friend WithEvents Label8 As System.Windows.Forms.Label
 	Friend WithEvents tbDelimiter As System.Windows.Forms.TextBox
 	Friend WithEvents Label9 As System.Windows.Forms.Label
 	Friend WithEvents tbColList As System.Windows.Forms.TextBox
@@ -849,7 +898,6 @@ Partial Class FormBetter
 	Friend WithEvents ddFileType As ComboBox
 	Friend WithEvents Label16 As Label
 	Friend WithEvents Button4 As Button
-	Friend WithEvents Label17 As Label
 	Friend WithEvents tbRegex As TextBox
 	Friend WithEvents Label18 As Label
 	Friend WithEvents tbDateFormat As TextBox
@@ -872,4 +920,9 @@ Partial Class FormBetter
 	Friend WithEvents btnTestExcel As Button
 	Friend WithEvents Label24 As Label
 	Friend WithEvents Label23 As Label
+	Friend WithEvents gbRegex As GroupBox
+	Friend WithEvents Label17 As Label
+	Friend WithEvents gbDelimiters As GroupBox
+	Friend WithEvents gbExcel As GroupBox
+	Friend WithEvents cbShowStack As CheckBox
 End Class

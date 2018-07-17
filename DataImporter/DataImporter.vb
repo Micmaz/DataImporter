@@ -34,6 +34,8 @@ Public Class DataImporter
 	Public Property simulate As Boolean = False
 	Public Property outputTable As DataTable = Nothing
 	Public Property regExCapture As String = Nothing
+	Public Property showstackTrace As Boolean = False
+
 	Private regexMatches As MatchCollection = Nothing
 	Private _regexColumnCapture As Regex
 	Private ReadOnly Property regexColumnCapture As Regex
@@ -200,9 +202,12 @@ Public Class DataImporter
 	Public Sub logerror(ex As Exception, Optional Message As String = "", Optional rownum As Integer = -1)
 		If rownum = -1 Then rownum = currentline
 		Dim errorMsg As String = ex.Message
+		If showstackTrace Then errorMsg &= vbCrLf & "StackTrace:" & vbCrLf & ex.StackTrace
 		If ex.InnerException IsNot Nothing Then
 			errorMsg &= " Inner Exception: " & ex.InnerException.Message
+			errorMsg &= vbCrLf & "StackTrace:" & vbCrLf & ex.InnerException.StackTrace
 		End If
+
 		errorList &= String.Format("{0}:{1} {2}", fileName, rownum, Message) & vbCrLf & errorMsg & vbCrLf
 		If WaitingMessage1 Is Nothing Then
 			consoleWriteError(String.Format("{0}:{1} {2}", fileName, rownum, Message) & vbCrLf & errorMsg + vbCrLf)
@@ -305,7 +310,7 @@ Public Class DataImporter
 		Return UploadTableFilename()
 	End Function
 
-	Public Function import() As Boolean
+	Public Function Import() As Boolean
 		Return UploadTableFilename()
 	End Function
 
@@ -585,7 +590,11 @@ Public Class DataImporter
 					ElseIf fileFormat = Format.excel Then
 						ht = New Hashtable
 						For j As Integer = 0 To editCols.Length - 1
-							ht(editCols(j)) = inputTable.Rows(i)(editCols(j))
+							If (inputTable.Columns.Contains(editCols(j))) Then
+								ht(editCols(j)) = inputTable.Rows(i)(editCols(j))
+							Else
+								ht(editCols(j)) = DBNull.Value
+							End If
 						Next
 					End If
 
@@ -1294,6 +1303,9 @@ Public Class DataImporter
 					Me.regExCapture = argv(i + 1)
 				ElseIf arg = "skip" Then
 					Me.skipRows = argv(i + 1)
+				ElseIf arg = "stack" Then
+					Me.showstackTrace = True
+					If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.showstackTrace = False
 				ElseIf arg = "dateform" Then
 					Me.dateFormatList = argv(i + 1)
 				ElseIf arg = "excelworksheet" Then

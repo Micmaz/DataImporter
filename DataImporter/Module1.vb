@@ -89,6 +89,7 @@ Usage:
         ex: "update mytable set createdDate=getdate() where createdDate is null;" ]
 [ /B Batch_size (default 100)] 
 
+[ /STACK ] show full stacktrace with errors (default is 0) [0,1]
 [ /Q ] Quiet mode, hides progress [0,1]
 
 [ /W show as a windows application. Parms are placed into the form fields. ]

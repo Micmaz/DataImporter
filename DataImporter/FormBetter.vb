@@ -46,6 +46,7 @@
 		di.batchsize = tbBatchSize.Text
 		di.regExCapture = tbRegex.Text
 		di.dateFormatList = tbDateFormat.Text
+		di.showstackTrace = cbShowStack.Checked
 
 		Dim format As String = ddFileType.Text.ToLower()
 		If format = "auto" Then di.fileFormat = DataImporter.Format.Auto
@@ -132,6 +133,7 @@
 			End If
 
 			If cbQuietMode.Checked Then output &= "/Q" & vbCrLf
+			If cbShowStack.Checked Then output &= "/STACK" & vbCrLf
 			If cbWindowMode.Checked Then output &= "/W" & vbCrLf
 
 			System.IO.File.WriteAllText(filename, output)
@@ -172,6 +174,7 @@
 		tbBatchSize.Text = di.batchsize
 		tbRegex.Text = di.regExCapture
 		tbDateFormat.Text = di.dateFormatList
+		cbShowStack.Checked = di.showstackTrace
 
 		ddFileType.Text = "Auto"
 		If di.fileFormat = DataImporter.Format.json Then ddFileType.Text = "json"
@@ -223,4 +226,21 @@
 		MessageBox.Show(di.testExcell())
 	End Sub
 
+	Private Sub ddFileType_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ddFileType.SelectedIndexChanged
+		gbDelimiters.Visible = False
+		gbExcel.Visible = False
+		gbRegex.Visible = False
+		Select Case ddFileType.Text.ToLower()
+			Case "auto"
+				gbDelimiters.Visible = True
+				gbExcel.Visible = True
+				gbRegex.Visible = True
+			Case "excel"
+				gbExcel.Visible = True
+			Case "csv"
+				gbDelimiters.Visible = True
+			Case "regex"
+				gbRegex.Visible = True
+		End Select
+	End Sub
 End Class
