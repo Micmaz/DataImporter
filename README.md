@@ -9,7 +9,7 @@ windows builder app:
 Save a config file then call it like :
 ![image](https://user-images.githubusercontent.com/5985484/41800366-3b495064-7643-11e8-9e42-4d301303548a.png)
 
-Or call it with coder like:
+Or call it within code like:
 ```C#
                     String filename = Server.MapPath(".") + "/" + testul.uploadPath + "/" + afilename;
                 
