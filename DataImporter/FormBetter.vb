@@ -15,8 +15,11 @@
 
 	Private Function setupDI() As Boolean
 		If Not System.IO.File.Exists(tbFileName.Text) Then
-			MsgBox("You uneed to select a valid input file.")
-			Return False
+			If Not tbFileName.Text.StartsWith("http") Then
+				MsgBox("You uneed to select a valid input file.")
+				Return False
+			End If
+
 		End If
 		di = Nothing
 		di = New DataImporter()

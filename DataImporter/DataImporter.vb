@@ -989,7 +989,9 @@ Public Class DataImporter
 				If Not rowVals.Length = 0 Then
 					ht = New Hashtable
 					For j As Integer = 0 To editCols.Length - 1
-						ht(editCols(j)) = rowVals(j)
+						If rowVals.Length > j Then
+							ht(editCols(j)) = rowVals(j)
+						End If
 					Next
 				End If
 
