@@ -57,7 +57,7 @@ Module Module1
     End Sub
 
 	Public Function helpMsg() As String
-		Dim s As String = <![CDATA[
+        Dim s As String = <![CDATA[
 Usage: 
 ##ASM##
 /C SQL_CONNECTION_STRING 
@@ -82,6 +82,7 @@ Usage:
 [ /DT ] Automatically set columns dateCreated and dateUpdated. Default is on  [0,1]
 [ /LIM Sql where clause that limits which unique cols will be checked ex: "recordDate > getdate()-10" ]
         If a limit is not supplied it will select a row from the database based on unique col list
+[ /SV Script_file_to_run_per_row_Values runs before de-duplication, takes a hashtable as an arg ]
 [ /S Script_file_to_run_per_row ]
 [ /ST Script_file_to_run_on_the_entire_table ]
 [ /SI Script_file_to_run_on_the_input_file ]
@@ -99,7 +100,7 @@ These commands can be in a seperate line seperated text file.
 The only argument is that text file. (Ex: ImportData configVals.txt)
         ]]>.Value.Replace("##ASM##", My.Application.Info.AssemblyName)
 
-		Return s
+        Return s
     End Function
 
 

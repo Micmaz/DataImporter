@@ -99,7 +99,8 @@ Public Class DataImporter
 		End Get
 	End Property
 	Public Property delimiter As String = ","
-	Public Property processRowScriptFile As String = Nothing
+    Public Property processValuesScriptFile As String = Nothing
+    Public Property processRowScriptFile As String = Nothing
 	Public Property processInputScriptFile As String = Nothing
 	Public Property processTableScript As String = Nothing
 	Public Property batchsize As Integer = 50
@@ -232,8 +233,8 @@ Public Class DataImporter
 						CSScriptLibrary.CSScript.GlobalSettings.UseAlternativeCompiler = folder
 					End If
 					Try
-						Dim asm As Assembly = CSScriptLibrary.CSScript.Load(processRowScriptFile)
-						assmHT(filename) = asm
+                        Dim asm As Assembly = CSScriptLibrary.CSScript.Load(filename)
+                        assmHT(filename) = asm
 						Dim instance = asm.CreateInstance(methodname.Split(".")(0))
 						If (instance IsNot Nothing) Then _
 							InstanceHT.Add(filename, instance)
@@ -404,8 +405,11 @@ Public Class DataImporter
 		Dim editCols As String()
 		Dim uniqueCols As String() = Nothing
 		Dim i As Integer = 0
-		Dim fileContents As String = ""
-		If inputTable Is Nothing Then
+        Dim fileContents As String = ""
+        If fileFormat = Format.excel AndAlso inputTable Is Nothing Then
+            Throw New Exception("Could not load excel driver. Please install ")
+        End If
+        If inputTable Is Nothing Then
 			If isFilenameURL Then
 				fileContents = getURLContents(fileName)
 			Else
@@ -599,67 +603,68 @@ Public Class DataImporter
 					End If
 
 					updateStatus("Reading record: ", currentline, max)
-					If ht IsNot Nothing Then
-						Dim newRow As DataRow = dt.NewRow
-						If uniqueCols IsNot Nothing Then
-							Dim queryStr As String = ""
-							Dim sqlqueryStr As String = ""
-							Dim sqlqueryParms As New List(Of Object)
-							For Each col As String In uniqueCols
-								col = col.ToLower
-								'For j As Integer = 0 To editCols.Length - 1
-								'    If col = editCols(j) Then
-								If ht(col) IsNot Nothing Then
-									Dim parm = parseRowVal(newRow, col, ht(col))
-									If parm Is DBNull.Value OrElse parm Is Nothing Then
-										queryStr &= String.Format("{0} is NULL  AND ", col)
-										sqlqueryStr &= String.Format("{0} is NULL AND ", col)
-									Else
-										queryStr &= String.Format("{0} = '{1}' AND ", col, EscapeLikeValue(parm))
-										sqlqueryStr &= String.Format("{0} = @{0} AND ", col)
-										sqlqueryParms.Add(parm)
-									End If
-								End If
-								'Exit For
-								'    End If
-								'Next
-							Next
-							If queryStr.Length > 0 Then
-								queryStr = queryStr.Substring(0, queryStr.Length - 5)
-								sqlqueryStr = sqlqueryStr.Substring(0, sqlqueryStr.Length - 5)
-								If limitingQuery = "" Then
-									sqlhelper.FillDataTable("select * from " & tableName & " where " & sqlqueryStr, dt, sqlqueryParms.ToArray())
-								End If
-							End If
+                    If ht IsNot Nothing Then
+                        runscriptfile(processValuesScriptFile, New Object() {ht, Me}, "ProcessRow.processValues")
+                        Dim newRow As DataRow = dt.NewRow
+                        If uniqueCols IsNot Nothing Then
+                            Dim queryStr As String = ""
+                            Dim sqlqueryStr As String = ""
+                            Dim sqlqueryParms As New List(Of Object)
+                            For Each col As String In uniqueCols
+                                col = col.ToLower
+                                'For j As Integer = 0 To editCols.Length - 1
+                                '    If col = editCols(j) Then
+                                If ht(col) IsNot Nothing Then
+                                    Dim parm = parseRowVal(newRow, col, ht(col))
+                                    If parm Is DBNull.Value OrElse parm Is Nothing Then
+                                        queryStr &= String.Format("{0} is NULL  AND ", col)
+                                        sqlqueryStr &= String.Format("{0} is NULL AND ", col)
+                                    Else
+                                        queryStr &= String.Format("{0} = '{1}' AND ", col, EscapeLikeValue(parm))
+                                        sqlqueryStr &= String.Format("{0} = @{0} AND ", col)
+                                        sqlqueryParms.Add(parm)
+                                    End If
+                                End If
+                                'Exit For
+                                '    End If
+                                'Next
+                            Next
+                            If queryStr.Length > 0 Then
+                                queryStr = queryStr.Substring(0, queryStr.Length - 5)
+                                sqlqueryStr = sqlqueryStr.Substring(0, sqlqueryStr.Length - 5)
+                                If limitingQuery = "" Then
+                                    sqlhelper.FillDataTable("select * from " & tableName & " where " & sqlqueryStr, dt, sqlqueryParms.ToArray())
+                                End If
+                            End If
 
-							If queryStr.Length > 0 Then
-								dv.RowFilter = queryStr
-								If dv.Count > 0 Then
-									newRow = dv(0).Row
-								End If
+                            If queryStr.Length > 0 Then
+                                dv.RowFilter = queryStr
+                                If dv.Count > 0 Then
+                                    newRow = dv(0).Row
+                                End If
 
-							End If
-						End If
+                            End If
+                        End If
 
-						If newRow IsNot Nothing Then
-							'newRow.BeginEdit()
-							For j As Integer = 0 To editCols.Length - 1
-								If (colLst.Contains(editCols(j))) Then
-									setRowValue(newRow, editCols(j), ht(editCols(j)))
-								End If
-							Next
-							If newRow.RowState = DataRowState.Detached Then
-								Try
-									dt.Rows.Add(newRow)
-								Catch ex As Exception
-									logerror(ex, "Error adding row to datatable:" & newRow.RowError)
-								End Try
-							End If
-						End If
-						runscriptfile(processRowScriptFile, New Object() {newRow, Me})
-					End If
-					' Include code here to handle the row. 
-				Else
+                        If newRow IsNot Nothing Then
+                            'newRow.BeginEdit()
+                            For j As Integer = 0 To editCols.Length - 1
+                                If (colLst.Contains(editCols(j))) Then
+                                    setRowValue(newRow, editCols(j), ht(editCols(j)))
+                                End If
+                            Next
+                            If newRow.RowState = DataRowState.Detached Then
+                                Try
+                                    dt.Rows.Add(newRow)
+                                Catch ex As Exception
+                                    logerror(ex, "Error adding row to datatable:" & newRow.RowError)
+                                End Try
+                            End If
+                        End If
+                        runscriptfile(processRowScriptFile, New Object() {newRow, Me})
+                    End If
+                    ' Include code here to handle the row. 
+                Else
 					If fileFormat = Format.csv Then parser.ReadFields()
 				End If
 			Catch ex As Microsoft.VisualBasic.FileIO.MalformedLineException
@@ -1253,25 +1258,27 @@ Public Class DataImporter
 			Dim arg As String = argv(i).ToLower()
 			If arg.StartsWith("/") Then
 				arg = arg.Trim("/")
-				If arg = "?" Then
-					writeHelp()
-					retval = argResults.writeHelp
-				ElseIf arg = "c" Then
-					Me.connectionString = argv(i + 1)
-				ElseIf arg = "ct" Then
-					Me.connectionType = argv(i + 1)
-				ElseIf arg = "f" Then
-					Me.fileName = argv(i + 1)
-				ElseIf arg = "t" Then
-					Me.tableName = argv(i + 1)
-				ElseIf arg = "p" Then
-					Me.uniqueIdentifierColumns = argv(i + 1)
-				ElseIf arg = "s" Then
-					Me.processRowScriptFile = argv(i + 1)
-				ElseIf arg = "st" Then
-					Me.processTableScript = argv(i + 1)
-				ElseIf arg = "si" Then
-					Me.processInputScriptFile = argv(i + 1)
+                If arg = "?" Then
+                    writeHelp()
+                    retval = argResults.writeHelp
+                ElseIf arg = "c" Then
+                    Me.connectionString = argv(i + 1)
+                ElseIf arg = "ct" Then
+                    Me.connectionType = argv(i + 1)
+                ElseIf arg = "f" Then
+                    Me.fileName = argv(i + 1)
+                ElseIf arg = "t" Then
+                    Me.tableName = argv(i + 1)
+                ElseIf arg = "p" Then
+                    Me.uniqueIdentifierColumns = argv(i + 1)
+                ElseIf arg = "sv" Then
+                    Me.processValuesScriptFile = argv(i + 1)
+                ElseIf arg = "s" Then
+                    Me.processRowScriptFile = argv(i + 1)
+                ElseIf arg = "st" Then
+                    Me.processTableScript = argv(i + 1)
+                ElseIf arg = "si" Then
+                    Me.processInputScriptFile = argv(i + 1)
 				ElseIf arg = "d" Then
 					Me.deleteExisting = True
 					If argv.Length > i AndAlso argv(i + 1) = "0" Then Me.deleteExisting = False
@@ -1328,7 +1335,7 @@ Public Class DataImporter
 		Return retval
 	End Function
 
-	Public Enum argResults
+    Public Enum argResults
 		normal
 		asForm
 		writeHelp
@@ -1386,17 +1393,18 @@ Public Class DataImporter
 #End Region
 
 	Public Function testExcell() As Boolean
-		Dim filename As String = "test.xls"
-		System.IO.File.Create(filename)
-		Dim cnnStr = String.Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Extended Properties=""Excel 8.0;IMEX=1;HDR=NO""", filename)
-		'Dim cnnStr = [String].Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", excelFilePath)
-		Dim cnn = New OleDbConnection(cnnStr)
+        Dim filename As String = System.IO.Path.GetTempFileName()
+        System.IO.File.Create(filename)
+        Dim cnnStr = String.Format("Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};Extended Properties=""Excel 12.0;HDR=NO""", filename)
+        'Dim cnnStr = [String].Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", excelFilePath)
+        Dim cnn = New OleDbConnection(cnnStr)
 
 		' get schema, then data
 		Dim dt = New DataTable()
 		Try
-			cnn.Open()
-		Catch e As Exception
+            cnn.Open()
+            cnn.Close()
+        Catch e As Exception
 			System.IO.File.Delete(filename)
 			Return False
 		End Try
