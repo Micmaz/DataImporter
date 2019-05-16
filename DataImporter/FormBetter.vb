@@ -3,6 +3,7 @@
 
     Private Sub Form1_Load(sender As Object, e As System.EventArgs) Handles Me.Load
         lblRunInfo.Text = Module1.helpMsg().Trim()
+        lblDefaultodbc.Text = DataImporter.defaultODBCConnection
         setvals(di)
     End Sub
 
@@ -52,12 +53,16 @@
         di.dateFormatList = tbDateFormat.Text
         di.showstackTrace = cbShowStack.Checked
 
+        di.odbcConnectionString = tbODBCConnection.Text
+        di.odbcTableName = tbODBCTable.Text
+
         Dim format As String = ddFileType.Text.ToLower()
         If format = "auto" Then di.fileFormat = DataImporter.Format.Auto
         If format = "json" Then di.fileFormat = DataImporter.Format.json
         If format = "csv" Then di.fileFormat = DataImporter.Format.csv
         If format = "excel" Then di.fileFormat = DataImporter.Format.excel
         If format = "regex" Then di.fileFormat = DataImporter.Format.regex
+        If format = "odbc" Then di.fileFormat = DataImporter.Format.odbc
         di.parentfrm = Me
         Return True
     End Function
@@ -89,11 +94,15 @@
         tbDateFormat.Text = di.dateFormatList
         cbShowStack.Checked = di.showstackTrace
 
+        tbODBCTable.Text = di.odbcTableName
+        tbODBCConnection.Text = di.odbcConnectionString
+
         ddFileType.Text = "Auto"
         If di.fileFormat = DataImporter.Format.json Then ddFileType.Text = "json"
         If di.fileFormat = DataImporter.Format.csv Then ddFileType.Text = "csv"
         If di.fileFormat = DataImporter.Format.excel Then ddFileType.Text = "excel"
         If di.fileFormat = DataImporter.Format.regex Then ddFileType.Text = "regex"
+        If di.fileFormat = DataImporter.Format.odbc Then ddFileType.Text = "odbc"
     End Sub
 
     Private Sub Button2_Click(sender As System.Object, e As System.EventArgs) Handles Button2.Click
@@ -121,6 +130,9 @@
             output &= getConfigLine("B", tbBatchSize)
             output &= getConfigLine("REGEX", tbRegex)
             output &= getConfigLine("DATEFORM", tbDateFormat)
+
+            output &= getConfigLine("ODBCTABLE", tbODBCTable)
+            output &= getConfigLine("ODBCCONN", tbODBCConnection)
 
             If ddFileType.Text.ToLower() <> "auto" Then
                 output &= "/FORMAT " & ddFileType.Text & vbCrLf
@@ -209,7 +221,19 @@
     End Sub
 
     Private Sub btnTestExcel_Click(sender As Object, e As EventArgs) Handles btnTestExcel.Click
-        MessageBox.Show(di.testExcell())
+        If Not System.IO.File.Exists(tbFileName.Text) Then
+            MessageBox.Show("Please select a file first in the input.")
+        Else
+            MessageBox.Show(di.testOdbc(tbFileName.Text))
+        End If
+    End Sub
+
+    Private Sub tbtestODBC_Click(sender As Object, e As EventArgs) Handles tbtestODBC.Click
+        If Not System.IO.File.Exists(tbFileName.Text) Then
+            MessageBox.Show("Please select a file first in the input.")
+        Else
+            MessageBox.Show(di.testOdbc(tbFileName.Text, tbODBCConnection.Text))
+        End If
     End Sub
 
     Private Sub Button7_Click(sender As Object, e As EventArgs) Handles Button7.Click
@@ -362,17 +386,21 @@ class " & ClassName & "
         gbDelimiters.Visible = False
         gbExcel.Visible = False
         gbRegex.Visible = False
+        gbODBC.Visible = False
         Select Case ddFileType.Text.ToLower()
             Case "auto"
                 gbDelimiters.Visible = True
                 gbExcel.Visible = True
                 gbRegex.Visible = True
+                gbODBC.Visible = True
             Case "excel"
                 gbExcel.Visible = True
             Case "csv"
                 gbDelimiters.Visible = True
             Case "regex"
                 gbRegex.Visible = True
+            Case "odbc"
+                gbODBC.Visible = True
         End Select
     End Sub
 

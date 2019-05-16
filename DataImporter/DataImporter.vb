@@ -16,8 +16,9 @@ Public Class DataImporter
 #Region "properties"
 
 	Public errorList As String = ""
-	Public statusList As String = ""
-	Public insertCount As Integer = 0
+    Public statusList As String = ""
+    Public processedCount As Integer = 0
+    Public insertCount As Integer = 0
 	Public updateCount As Integer = 0
 	Public deleteCount As Integer = 0
 	Public currentline As Integer = 0
@@ -112,8 +113,12 @@ Public Class DataImporter
 	Public importStartedDate As DateTime
 	Public Property fileFormat As Format = Format.Auto
 	Public Property dateFormats As String() = New String() {"dd/MM/yyyy", "dd/M/yyyy", "d/M/yyyy", "d/MM/yyyy", "dd/MM/yy", "dd/M/yy", "d/M/yy", "d/MM/yy", "yyyyMMdd"}
-
-	Private _mydateFormats As String = ""
+    Public Property odbcConnectionString As String = Nothing
+    Public Property odbcTableName As String = Nothing
+    Public Const defaultODBCConnection As String = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};User Id=admin;Password=;"
+    Public Const defaultXLSXConnection As String = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};Extended Properties=""Excel 12.0;HDR=NO"""
+    Public Const defaultXLSConnection As String = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Extended Properties=""Excel 8.0;IMEX=1;HDR=NO"""
+    Private _mydateFormats As String = ""
 	Public Property dateFormatList As String
 		Get
 			Return _mydateFormats
@@ -327,20 +332,30 @@ Public Class DataImporter
 
 	Public Function UploadTableFilenameWorker() As Boolean
 		Try
-			updateStatus("Reading File: " & fileName)
-			If fileFormat = Format.Auto Then
+            updateStatus("Reading File: " & fileName)
+            Dim lowername = fileName.ToLower()
+            If fileFormat = Format.Auto Then
 				fileFormat = Format.csv
-				If fileName.ToLower.EndsWith("json") Then fileFormat = Format.json
-				If Not String.IsNullOrWhiteSpace(regExCapture) Then fileFormat = Format.regex
+                If lowername.EndsWith("json") Then fileFormat = Format.json
+                If Not String.IsNullOrWhiteSpace(regExCapture) Then fileFormat = Format.regex
 			End If
 
 			Dim inputTable As DataTable = Nothing
-			Try
-				inputTable = ConvertExcelToTable(fileName, excelWorksheetNumber)
-				fileFormat = Format.excel
-			Catch ex As Exception
+            Try
+                If lowername.EndsWith("xls") OrElse lowername.EndsWith("xlsx") Then
+                    inputTable = ConvertExcelToTable(fileName, excelWorksheetNumber)
+                    fileFormat = Format.excel
+                End If
+                If Not String.IsNullOrEmpty(odbcTableName) Then
+                    If Not String.IsNullOrEmpty(odbcConnectionString) Then
+                        inputTable = ConvertODBCToTable(fileName, odbcTableName, connectionString)
+                    Else
+                        inputTable = ConvertODBCToTable(fileName, odbcTableName)
+                    End If
+                End If
+            Catch ex As Exception
 
-			End Try
+            End Try
 
 
 			If isFilenameURL Or File.Exists(fileName) Then _
@@ -363,8 +378,9 @@ Public Class DataImporter
 		csv = 1
 		json = 2
 		excel = 3
-		regex = 4
-	End Enum
+        regex = 4
+        odbc = 5
+    End Enum
 
 	Dim parser As Microsoft.VisualBasic.FileIO.TextFieldParser
 	Dim jsonList As New List(Of Hashtable)
@@ -390,8 +406,9 @@ Public Class DataImporter
 		currentline = 0
 		insertCount = 0
 		updateCount = 0
-		deleteCount = 0
-		importStartedDate = Date.Now
+        deleteCount = 0
+        processedCount = 0
+        importStartedDate = Date.Now
 
 
 		Dim max As Integer = 100
@@ -570,39 +587,40 @@ Public Class DataImporter
 				i += 1
 				Dim ht As Hashtable = Nothing
 				currentline = i
-				If currentline >= skipRows Then
-					If fileFormat = Format.csv Then
-						currentline = parser.LineNumber
-						rowVals = parser.ReadFields()
-						If Not rowVals.Length = 0 Then
-							ht = New Hashtable
-							For j As Integer = 0 To editCols.Length - 1
-								If rowVals.Length < j Then
-									logerror(New Exception("Not enough value in row for all parms"), "The row did not have enough values for item:" & editCols(j), currentline)
-								Else
-									ht(editCols(j)) = rowVals(j)
-								End If
-							Next
-						End If
-					ElseIf fileFormat = Format.regex Then
-						ht = New Hashtable
-						For j As Integer = 0 To editCols.Length - 1
-							ht(editCols(j)) = regexMatches(i).Groups(regexColtoGroup(editCols(j))).Value.Trim()
-						Next
-					ElseIf fileFormat = Format.json Then
-						ht = jsonList(i)
-					ElseIf fileFormat = Format.excel Then
-						ht = New Hashtable
-						For j As Integer = 0 To editCols.Length - 1
-							If (inputTable.Columns.Contains(editCols(j))) Then
-								ht(editCols(j)) = inputTable.Rows(i)(editCols(j))
-							Else
-								ht(editCols(j)) = DBNull.Value
-							End If
-						Next
-					End If
+                If currentline >= skipRows Then
+                    processedCount += 1
+                    If fileFormat = Format.csv Then
+                        currentline = parser.LineNumber
+                        rowVals = parser.ReadFields()
+                        If Not rowVals.Length = 0 Then
+                            ht = New Hashtable
+                            For j As Integer = 0 To editCols.Length - 1
+                                If rowVals.Length < j Then
+                                    logerror(New Exception("Not enough value in row for all parms"), "The row did not have enough values for item:" & editCols(j), currentline)
+                                Else
+                                    ht(editCols(j)) = rowVals(j)
+                                End If
+                            Next
+                        End If
+                    ElseIf fileFormat = Format.regex Then
+                        ht = New Hashtable
+                        For j As Integer = 0 To editCols.Length - 1
+                            ht(editCols(j)) = regexMatches(i).Groups(regexColtoGroup(editCols(j))).Value.Trim()
+                        Next
+                    ElseIf fileFormat = Format.json Then
+                        ht = jsonList(i)
+                    ElseIf fileFormat = Format.excel Then
+                        ht = New Hashtable
+                        For j As Integer = 0 To editCols.Length - 1
+                            If (inputTable.Columns.Contains(editCols(j))) Then
+                                ht(editCols(j)) = inputTable.Rows(i)(editCols(j))
+                            Else
+                                ht(editCols(j)) = DBNull.Value
+                            End If
+                        Next
+                    End If
 
-					updateStatus("Reading record: ", currentline, max)
+                    updateStatus("Reading record: ", currentline, max)
                     If ht IsNot Nothing Then
                         runscriptfile(processValuesScriptFile, New Object() {ht, Me}, "ProcessRow.processValues")
                         Dim newRow As DataRow = dt.NewRow
@@ -665,7 +683,7 @@ Public Class DataImporter
                     End If
                     ' Include code here to handle the row. 
                 Else
-					If fileFormat = Format.csv Then parser.ReadFields()
+                    If fileFormat = Format.csv Then parser.ReadFields()
 				End If
 			Catch ex As Microsoft.VisualBasic.FileIO.MalformedLineException
 				logerror(ex, "Malformed input file")
@@ -726,11 +744,12 @@ Public Class DataImporter
 
 	Private Function setStatusSummary() As Boolean
 		Try
-			statusList &= "Table:         " & tableName & vbCrLf
-			statusList &= "Updated Rows:  " & updateCount & vbCrLf
-			statusList &= "Inserted Rows: " & insertCount & vbCrLf
-			statusList &= "Deleted Rows:  " & deleteCount & vbCrLf
-			Return True
+            statusList &= "Table:          " & tableName & vbCrLf
+            statusList &= "Processed Rows: " & processedCount & vbCrLf
+            statusList &= "Updated Rows:   " & updateCount & vbCrLf
+            statusList &= "Inserted Rows:  " & insertCount & vbCrLf
+            statusList &= "Deleted Rows:   " & deleteCount & vbCrLf
+            Return True
 		Catch ex As Exception
 			Return False
 		End Try
@@ -1279,57 +1298,62 @@ Public Class DataImporter
                     Me.processTableScript = argv(i + 1)
                 ElseIf arg = "si" Then
                     Me.processInputScriptFile = argv(i + 1)
-				ElseIf arg = "d" Then
-					Me.deleteExisting = True
-					If argv.Length > i AndAlso argv(i + 1) = "0" Then Me.deleteExisting = False
-				ElseIf arg = "b" Then
-					Me.batchsize = argv(i + 1)
-				ElseIf arg = "n" Then
-					Me.createIfMissing = True
-					If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.createIfMissing = False
-				ElseIf arg = "q" Then
-					Me.hideProgress = True
-					If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.hideProgress = False
-				ElseIf arg = "dt" Then
-					Me.setCreatedDate = True
-					If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.setCreatedDate = False
-				ElseIf arg = "nullblank" Then
-					Me.blankIsNull = True
-					If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.setCreatedDate = False
-				ElseIf arg = "cols" Then
-					Me.columnNames = argv(i + 1)
-				ElseIf arg = "lim" Then
-					Me.limitingQuery = argv(i + 1)
-				ElseIf arg = "compsql" Then
-					Me.completedSQL = argv(i + 1)
-				ElseIf arg = "w" Then
-					retval = argResults.asForm
-				ElseIf arg = "delim" Then
-					Dim delimChar As String = argv(i + 1)
-					If delimChar.ToLower = "tab" Then delimChar = vbTab
-					Me.delimiter = delimChar
-				ElseIf arg = "regex" Then
-					Me.regExCapture = argv(i + 1)
-				ElseIf arg = "skip" Then
-					Me.skipRows = argv(i + 1)
-				ElseIf arg = "stack" Then
-					Me.showstackTrace = True
-					If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.showstackTrace = False
-				ElseIf arg = "dateform" Then
-					Me.dateFormatList = argv(i + 1)
-				ElseIf arg = "excelworksheet" Then
-					Me.excelWorksheetNumber = argv(i + 1)
-				ElseIf arg = "format" Then
+                ElseIf arg = "d" Then
+                    Me.deleteExisting = True
+                    If argv.Length > i AndAlso argv(i + 1) = "0" Then Me.deleteExisting = False
+                ElseIf arg = "b" Then
+                    Me.batchsize = argv(i + 1)
+                ElseIf arg = "n" Then
+                    Me.createIfMissing = True
+                    If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.createIfMissing = False
+                ElseIf arg = "q" Then
+                    Me.hideProgress = True
+                    If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.hideProgress = False
+                ElseIf arg = "dt" Then
+                    Me.setCreatedDate = True
+                    If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.setCreatedDate = False
+                ElseIf arg = "nullblank" Then
+                    Me.blankIsNull = True
+                    If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.setCreatedDate = False
+                ElseIf arg = "cols" Then
+                    Me.columnNames = argv(i + 1)
+                ElseIf arg = "lim" Then
+                    Me.limitingQuery = argv(i + 1)
+                ElseIf arg = "compsql" Then
+                    Me.completedSQL = argv(i + 1)
+                ElseIf arg = "w" Then
+                    retval = argResults.asForm
+                ElseIf arg = "delim" Then
+                    Dim delimChar As String = argv(i + 1)
+                    If delimChar.ToLower = "tab" Then delimChar = vbTab
+                    Me.delimiter = delimChar
+                ElseIf arg = "regex" Then
+                    Me.regExCapture = argv(i + 1)
+                ElseIf arg = "skip" Then
+                    Me.skipRows = argv(i + 1)
+                ElseIf arg = "stack" Then
+                    Me.showstackTrace = True
+                    If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.showstackTrace = False
+                ElseIf arg = "dateform" Then
+                    Me.dateFormatList = argv(i + 1)
+                ElseIf arg = "excelworksheet" Then
+                    Me.excelWorksheetNumber = argv(i + 1)
+                ElseIf arg = "odbctable" Then
+                    Me.odbcTableName = argv(i + 1)
+                ElseIf arg = "odbcconn" Then
+                    Me.odbcConnectionString = argv(i + 1)
+                ElseIf arg = "format" Then
 					If argv.Length > i + 1 Then
 						Dim format As String = argv(i + 1).ToLower()
 						If format = "auto" Then Me.fileFormat = DataImporter.Format.Auto
 						If format = "json" Then Me.fileFormat = DataImporter.Format.json
 						If format = "csv" Then Me.fileFormat = DataImporter.Format.csv
-						If format = "excel" Then Me.fileFormat = DataImporter.Format.excel
-						If format = "regex" Then Me.fileFormat = DataImporter.Format.regex
+                        If format = "excel" Then Me.fileFormat = DataImporter.Format.excel
+                        If format = "odbc" Then Me.fileFormat = DataImporter.Format.odbc
+                        If format = "regex" Then Me.fileFormat = DataImporter.Format.regex
 					End If
 
-				End If
+                End If
 			End If
 		Next
 		Return retval
@@ -1351,11 +1375,11 @@ Public Class DataImporter
 			Throw New FileNotFoundException(excelFilePath)
 		End If
 
-		' connection string
-		Dim cnnStr = String.Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Extended Properties=""Excel 8.0;IMEX=1;HDR=NO""", excelFilePath)
-		If excelFilePath.ToLower().EndsWith("xlsx") Then
-			cnnStr = String.Format("Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};Extended Properties=""Excel 12.0;HDR=NO""", excelFilePath)
-		End If
+        ' connection string
+        Dim cnnStr = String.Format(defaultXLSConnection, excelFilePath)
+        If excelFilePath.ToLower().EndsWith("xlsx") Then
+            cnnStr = String.Format(defaultXLSConnection, excelFilePath)
+        End If
 		'Dim cnnStr = [String].Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", excelFilePath)
 		Dim cnn = New OleDbConnection(cnnStr)
 
@@ -1390,30 +1414,61 @@ Public Class DataImporter
 		Return dt
 	End Function
 
-#End Region
-
-	Public Function testExcell() As Boolean
-        Dim filename As String = System.IO.Path.GetTempFileName()
-        System.IO.File.Create(filename)
-        Dim cnnStr = String.Format("Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};Extended Properties=""Excel 12.0;HDR=NO""", filename)
-        'Dim cnnStr = [String].Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", excelFilePath)
+    Public Shared Function ConvertODBCToTable(FilePath As String, TableName As String, Optional ConnectionString As String = Nothing) As DataTable
+        If String.IsNullOrWhiteSpace(ConnectionString) Then ConnectionString = defaultODBCConnection
+        If Not File.Exists(FilePath) Then
+            Throw New FileNotFoundException(FilePath)
+        End If
+        Dim cnnStr = String.Format(ConnectionString, FilePath)
         Dim cnn = New OleDbConnection(cnnStr)
 
-		' get schema, then data
-		Dim dt = New DataTable()
-		Try
+        ' get schema, then data
+        Dim dt = New DataTable()
+        Try
             cnn.Open()
-            cnn.Close()
+            Dim schemaTable = cnn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, Nothing)
+
+            Dim sql As String = [String].Format("select * from [{0}]", TableName)
+            Dim da = New OleDbDataAdapter(sql, cnn)
+            da.Fill(dt)
+
         Catch e As Exception
-			System.IO.File.Delete(filename)
-			Return False
-		End Try
-		System.IO.File.Delete(filename)
-		Return True
+            ' ???
+            Throw e
+        Finally
+            ' free resources
+            cnn.Close()
+        End Try
+        Return dt
+    End Function
 
-	End Function
 
-	Private Function getURLContents(ByVal url As String) As String
+#End Region
+
+    Public Function testOdbc(filename As String, Optional connectionString As String = Nothing) As String
+
+        If String.IsNullOrWhiteSpace(connectionString) Then
+            connectionString = defaultODBCConnection
+            If filename.ToLower().EndsWith("xls") Then connectionString = defaultXLSConnection
+            If filename.ToLower().EndsWith("xlsx") Then connectionString = defaultXLSXConnection
+        End If
+        Dim cnnStr = String.Format(connectionString, filename)
+        'Dim cnnStr = [String].Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", excelFilePath)
+        Dim cnn = New OleDbConnection(cnnStr)
+        ' get schema, then data
+        Try
+            cnn.Open()
+        Catch e As Exception
+            Return e.Message
+        Finally
+            cnn.Close()
+
+        End Try
+        Return "Success"
+
+    End Function
+
+    Private Function getURLContents(ByVal url As String) As String
 		Dim options As RegexOptions = RegexOptions.IgnoreCase Or RegexOptions.Multiline Or RegexOptions.CultureInvariant Or RegexOptions.IgnorePatternWhitespace Or RegexOptions.Compiled
 
 		Dim objwebclient As New System.Net.WebClient

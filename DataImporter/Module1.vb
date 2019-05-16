@@ -64,7 +64,7 @@ Usage:
 /F Imported_File_name Can be a file or a URL starting with http:// or https://
 /T Imported_Table_Name 
 [ /CT ] Connection_type can be sql,sqlite,oracle,mysql. Default is SQL for SQLserver
-[ /FORMAT ] Usually infered from the extenstion. Can be auto,json,excel,csv,or text parsed with a regex
+[ /FORMAT ] Usually infered from the extenstion. Can be auto,json,excel,odbc,csv,or text parsed with a regex
 
 [ /COLS Comma_Delimited_Column_List ] (Only update listed columns)
 [ /P Unique_col_list (if these values exist in the database the row will be updated) ]
@@ -72,8 +72,10 @@ Usage:
 [ /DELIM ] the delimiter for the file (defaults to ",")
 [ /REGEX Reular expression capture ] Captures from text via regular expression. 
 		All columns must be a named capture.
-[ /EXCELWORKSHEET] The number of the excel worksheet to import (Starting at 0)
+[ /EXCELWORKSHEET ] The number of the excel worksheet to import (Starting at 0)
 	-1 can be used to import all worksheets.
+[ /ODBCTABLE ] The table name used when importing from an odbc source. (required if odbc is used)
+[ /ODBCCONN ] The Connection string used with an ODBC connection 
 [ /SKIP Number_of_rows_to_skip ] (default 0)
 [ /D ] Clear data table when the import starts
 [ /N ] Create Table if missing
@@ -88,7 +90,7 @@ Usage:
 [ /SI Script_file_to_run_on_the_input_file ]
 [ /COMPSQL Sql statements executed after the import is complete 
         ex: "update mytable set createdDate=getdate() where createdDate is null;" ]
-[ /B Batch_size (default 100)] 
+[ /B Batch_size (default 100)] This is the number of rows processed at a time
 
 [ /STACK ] show full stacktrace with errors (default is 0) [0,1]
 [ /Q ] Quiet mode, hides progress [0,1]

@@ -107,6 +107,14 @@ Partial Class FormBetter
         Me.TabPage4 = New System.Windows.Forms.TabPage()
         Me.cbShowStack = New System.Windows.Forms.CheckBox()
         Me.SaveFileDialogScriptSamp = New System.Windows.Forms.SaveFileDialog()
+        Me.gbODBC = New System.Windows.Forms.GroupBox()
+        Me.Label27 = New System.Windows.Forms.Label()
+        Me.tbODBCConnection = New System.Windows.Forms.TextBox()
+        Me.Label28 = New System.Windows.Forms.Label()
+        Me.tbODBCTable = New System.Windows.Forms.TextBox()
+        Me.Label29 = New System.Windows.Forms.Label()
+        Me.tbtestODBC = New System.Windows.Forms.Button()
+        Me.lblDefaultodbc = New System.Windows.Forms.Label()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.gbExcel.SuspendLayout()
@@ -116,10 +124,13 @@ Partial Class FormBetter
         Me.TabPage3.SuspendLayout()
         Me.GroupBox1.SuspendLayout()
         Me.TabPage4.SuspendLayout()
+        Me.gbODBC.SuspendLayout()
         Me.SuspendLayout()
         '
         'tbFileName
         '
+        Me.tbFileName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tbFileName.Location = New System.Drawing.Point(92, 19)
         Me.tbFileName.Name = "tbFileName"
         Me.tbFileName.Size = New System.Drawing.Size(489, 20)
@@ -137,6 +148,7 @@ Partial Class FormBetter
         '
         'btnBrowse
         '
+        Me.btnBrowse.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.btnBrowse.Location = New System.Drawing.Point(587, 19)
         Me.btnBrowse.Name = "btnBrowse"
         Me.btnBrowse.Size = New System.Drawing.Size(75, 23)
@@ -160,9 +172,11 @@ Partial Class FormBetter
         '
         'tbConnection
         '
+        Me.tbConnection.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tbConnection.Location = New System.Drawing.Point(106, 16)
         Me.tbConnection.Name = "tbConnection"
-        Me.tbConnection.Size = New System.Drawing.Size(651, 20)
+        Me.tbConnection.Size = New System.Drawing.Size(538, 20)
         Me.tbConnection.TabIndex = 3
         Me.tbConnection.Text = "Data Source=vmdevsql03;Initial Catalog=CourtReminder;Integrated Security=True"
         '
@@ -185,7 +199,7 @@ Partial Class FormBetter
         'btnImport
         '
         Me.btnImport.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.btnImport.Location = New System.Drawing.Point(7, 514)
+        Me.btnImport.Location = New System.Drawing.Point(7, 572)
         Me.btnImport.Name = "btnImport"
         Me.btnImport.Size = New System.Drawing.Size(101, 38)
         Me.btnImport.TabIndex = 8
@@ -203,16 +217,20 @@ Partial Class FormBetter
         '
         'tbProcessRow
         '
+        Me.tbProcessRow.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tbProcessRow.Location = New System.Drawing.Point(126, 41)
         Me.tbProcessRow.Name = "tbProcessRow"
-        Me.tbProcessRow.Size = New System.Drawing.Size(409, 20)
+        Me.tbProcessRow.Size = New System.Drawing.Size(324, 20)
         Me.tbProcessRow.TabIndex = 9
         '
         'tbPriKeys
         '
+        Me.tbPriKeys.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tbPriKeys.Location = New System.Drawing.Point(106, 137)
         Me.tbPriKeys.Name = "tbPriKeys"
-        Me.tbPriKeys.Size = New System.Drawing.Size(462, 20)
+        Me.tbPriKeys.Size = New System.Drawing.Size(493, 20)
         Me.tbPriKeys.TabIndex = 11
         '
         'Label5
@@ -236,7 +254,7 @@ Partial Class FormBetter
         'tbBatchSize
         '
         Me.tbBatchSize.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.tbBatchSize.Location = New System.Drawing.Point(86, 434)
+        Me.tbBatchSize.Location = New System.Drawing.Point(86, 492)
         Me.tbBatchSize.Name = "tbBatchSize"
         Me.tbBatchSize.Size = New System.Drawing.Size(50, 20)
         Me.tbBatchSize.TabIndex = 13
@@ -246,7 +264,7 @@ Partial Class FormBetter
         '
         Me.Label6.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.Label6.AutoSize = True
-        Me.Label6.Location = New System.Drawing.Point(19, 437)
+        Me.Label6.Location = New System.Drawing.Point(19, 495)
         Me.Label6.Name = "Label6"
         Me.Label6.Size = New System.Drawing.Size(61, 13)
         Me.Label6.TabIndex = 14
@@ -272,9 +290,11 @@ Partial Class FormBetter
         '
         'tbProcessTable
         '
+        Me.tbProcessTable.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tbProcessTable.Location = New System.Drawing.Point(126, 67)
         Me.tbProcessTable.Name = "tbProcessTable"
-        Me.tbProcessTable.Size = New System.Drawing.Size(409, 20)
+        Me.tbProcessTable.Size = New System.Drawing.Size(324, 20)
         Me.tbProcessTable.TabIndex = 16
         '
         'tbDelimiter
@@ -296,9 +316,11 @@ Partial Class FormBetter
         '
         'tbColList
         '
+        Me.tbColList.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tbColList.Location = New System.Drawing.Point(106, 109)
         Me.tbColList.Name = "tbColList"
-        Me.tbColList.Size = New System.Drawing.Size(462, 20)
+        Me.tbColList.Size = New System.Drawing.Size(493, 20)
         Me.tbColList.TabIndex = 20
         '
         'Label10
@@ -329,7 +351,8 @@ Partial Class FormBetter
         '
         'Button1
         '
-        Me.Button1.Location = New System.Drawing.Point(551, 39)
+        Me.Button1.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Button1.Location = New System.Drawing.Point(466, 39)
         Me.Button1.Name = "Button1"
         Me.Button1.Size = New System.Drawing.Size(75, 23)
         Me.Button1.TabIndex = 25
@@ -344,7 +367,7 @@ Partial Class FormBetter
         'Button2
         '
         Me.Button2.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Button2.Location = New System.Drawing.Point(744, 514)
+        Me.Button2.Location = New System.Drawing.Point(667, 572)
         Me.Button2.Name = "Button2"
         Me.Button2.Size = New System.Drawing.Size(130, 40)
         Me.Button2.TabIndex = 26
@@ -366,11 +389,13 @@ Partial Class FormBetter
         '
         'tbLimitingSQL
         '
+        Me.tbLimitingSQL.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tbLimitingSQL.Location = New System.Drawing.Point(163, 135)
         Me.tbLimitingSQL.Multiline = True
         Me.tbLimitingSQL.Name = "tbLimitingSQL"
         Me.tbLimitingSQL.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal
-        Me.tbLimitingSQL.Size = New System.Drawing.Size(324, 126)
+        Me.tbLimitingSQL.Size = New System.Drawing.Size(365, 126)
         Me.tbLimitingSQL.TabIndex = 29
         '
         'Label13
@@ -393,17 +418,19 @@ Partial Class FormBetter
         '
         'tbSQLCompleted
         '
+        Me.tbSQLCompleted.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tbSQLCompleted.Location = New System.Drawing.Point(164, 303)
         Me.tbSQLCompleted.Multiline = True
         Me.tbSQLCompleted.Name = "tbSQLCompleted"
         Me.tbSQLCompleted.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal
-        Me.tbSQLCompleted.Size = New System.Drawing.Size(323, 130)
+        Me.tbSQLCompleted.Size = New System.Drawing.Size(364, 130)
         Me.tbSQLCompleted.TabIndex = 31
         '
         'Button3
         '
         Me.Button3.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Button3.Location = New System.Drawing.Point(608, 514)
+        Me.Button3.Location = New System.Drawing.Point(531, 572)
         Me.Button3.Name = "Button3"
         Me.Button3.Size = New System.Drawing.Size(130, 40)
         Me.Button3.TabIndex = 33
@@ -433,16 +460,18 @@ Partial Class FormBetter
         '
         'tbProcessInputFilescript
         '
+        Me.tbProcessInputFilescript.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tbProcessInputFilescript.Location = New System.Drawing.Point(126, 92)
         Me.tbProcessInputFilescript.Name = "tbProcessInputFilescript"
-        Me.tbProcessInputFilescript.Size = New System.Drawing.Size(409, 20)
+        Me.tbProcessInputFilescript.Size = New System.Drawing.Size(324, 20)
         Me.tbProcessInputFilescript.TabIndex = 35
         '
         'cbQuietMode
         '
         Me.cbQuietMode.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.cbQuietMode.AutoSize = True
-        Me.cbQuietMode.Location = New System.Drawing.Point(114, 527)
+        Me.cbQuietMode.Location = New System.Drawing.Point(114, 585)
         Me.cbQuietMode.Name = "cbQuietMode"
         Me.cbQuietMode.Size = New System.Drawing.Size(296, 17)
         Me.cbQuietMode.TabIndex = 37
@@ -453,7 +482,7 @@ Partial Class FormBetter
         '
         Me.cbWindowMode.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.cbWindowMode.AutoSize = True
-        Me.cbWindowMode.Location = New System.Drawing.Point(114, 511)
+        Me.cbWindowMode.Location = New System.Drawing.Point(114, 569)
         Me.cbWindowMode.Name = "cbWindowMode"
         Me.cbWindowMode.Size = New System.Drawing.Size(183, 17)
         Me.cbWindowMode.TabIndex = 38
@@ -484,7 +513,7 @@ Partial Class FormBetter
         'ddFileType
         '
         Me.ddFileType.FormattingEnabled = True
-        Me.ddFileType.Items.AddRange(New Object() {"Auto", "csv", "excel", "json", "regex"})
+        Me.ddFileType.Items.AddRange(New Object() {"Auto", "csv", "excel", "odbc", "json", "regex"})
         Me.ddFileType.Location = New System.Drawing.Point(92, 45)
         Me.ddFileType.Name = "ddFileType"
         Me.ddFileType.Size = New System.Drawing.Size(121, 21)
@@ -503,7 +532,7 @@ Partial Class FormBetter
         'Button4
         '
         Me.Button4.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Button4.Location = New System.Drawing.Point(497, 514)
+        Me.Button4.Location = New System.Drawing.Point(420, 572)
         Me.Button4.Name = "Button4"
         Me.Button4.Size = New System.Drawing.Size(105, 40)
         Me.Button4.TabIndex = 42
@@ -518,7 +547,7 @@ Partial Class FormBetter
         Me.tbRegex.Location = New System.Drawing.Point(6, 19)
         Me.tbRegex.Multiline = True
         Me.tbRegex.Name = "tbRegex"
-        Me.tbRegex.Size = New System.Drawing.Size(568, 99)
+        Me.tbRegex.Size = New System.Drawing.Size(723, 72)
         Me.tbRegex.TabIndex = 43
         '
         'Label18
@@ -549,11 +578,12 @@ Partial Class FormBetter
         Me.TabControl1.Location = New System.Drawing.Point(7, 9)
         Me.TabControl1.Name = "TabControl1"
         Me.TabControl1.SelectedIndex = 0
-        Me.TabControl1.Size = New System.Drawing.Size(871, 499)
+        Me.TabControl1.Size = New System.Drawing.Size(790, 557)
         Me.TabControl1.TabIndex = 47
         '
         'TabPage1
         '
+        Me.TabPage1.Controls.Add(Me.gbODBC)
         Me.TabPage1.Controls.Add(Me.gbExcel)
         Me.TabPage1.Controls.Add(Me.gbDelimiters)
         Me.TabPage1.Controls.Add(Me.gbRegex)
@@ -571,20 +601,22 @@ Partial Class FormBetter
         Me.TabPage1.Location = New System.Drawing.Point(4, 22)
         Me.TabPage1.Name = "TabPage1"
         Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage1.Size = New System.Drawing.Size(863, 473)
+        Me.TabPage1.Size = New System.Drawing.Size(782, 531)
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "Source"
         Me.TabPage1.UseVisualStyleBackColor = True
         '
         'gbExcel
         '
+        Me.gbExcel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.gbExcel.Controls.Add(Me.Label21)
         Me.gbExcel.Controls.Add(Me.tbWorkbookNum)
         Me.gbExcel.Controls.Add(Me.Label22)
         Me.gbExcel.Controls.Add(Me.btnTestExcel)
         Me.gbExcel.Location = New System.Drawing.Point(9, 149)
         Me.gbExcel.Name = "gbExcel"
-        Me.gbExcel.Size = New System.Drawing.Size(596, 100)
+        Me.gbExcel.Size = New System.Drawing.Size(751, 65)
         Me.gbExcel.TabIndex = 52
         Me.gbExcel.TabStop = False
         Me.gbExcel.Text = "Excel Options"
@@ -593,7 +625,7 @@ Partial Class FormBetter
         '
         Me.Label21.AutoSize = True
         Me.Label21.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
-        Me.Label21.Location = New System.Drawing.Point(6, 29)
+        Me.Label21.Location = New System.Drawing.Point(6, 16)
         Me.Label21.Name = "Label21"
         Me.Label21.Size = New System.Drawing.Size(80, 13)
         Me.Label21.TabIndex = 47
@@ -601,7 +633,7 @@ Partial Class FormBetter
         '
         'tbWorkbookNum
         '
-        Me.tbWorkbookNum.Location = New System.Drawing.Point(9, 45)
+        Me.tbWorkbookNum.Location = New System.Drawing.Point(9, 32)
         Me.tbWorkbookNum.Name = "tbWorkbookNum"
         Me.tbWorkbookNum.Size = New System.Drawing.Size(26, 20)
         Me.tbWorkbookNum.TabIndex = 46
@@ -610,7 +642,7 @@ Partial Class FormBetter
         'Label22
         '
         Me.Label22.AutoSize = True
-        Me.Label22.Location = New System.Drawing.Point(41, 48)
+        Me.Label22.Location = New System.Drawing.Point(41, 35)
         Me.Label22.Name = "Label22"
         Me.Label22.Size = New System.Drawing.Size(133, 13)
         Me.Label22.TabIndex = 48
@@ -618,31 +650,37 @@ Partial Class FormBetter
         '
         'btnTestExcel
         '
-        Me.btnTestExcel.Location = New System.Drawing.Point(248, 38)
+        Me.btnTestExcel.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnTestExcel.Location = New System.Drawing.Point(627, 35)
         Me.btnTestExcel.Name = "btnTestExcel"
-        Me.btnTestExcel.Size = New System.Drawing.Size(75, 23)
+        Me.btnTestExcel.Size = New System.Drawing.Size(118, 23)
         Me.btnTestExcel.TabIndex = 49
         Me.btnTestExcel.Text = "Test Excel Drivers"
         Me.btnTestExcel.UseVisualStyleBackColor = True
         '
         'gbDelimiters
         '
+        Me.gbDelimiters.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.gbDelimiters.Controls.Add(Me.tbDelimiter)
         Me.gbDelimiters.Controls.Add(Me.Label12)
         Me.gbDelimiters.Location = New System.Drawing.Point(9, 96)
         Me.gbDelimiters.Name = "gbDelimiters"
-        Me.gbDelimiters.Size = New System.Drawing.Size(596, 49)
+        Me.gbDelimiters.Size = New System.Drawing.Size(751, 49)
         Me.gbDelimiters.TabIndex = 51
         Me.gbDelimiters.TabStop = False
         Me.gbDelimiters.Text = "Delimiters"
         '
         'gbRegex
         '
+        Me.gbRegex.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.gbRegex.Controls.Add(Me.Label17)
         Me.gbRegex.Controls.Add(Me.tbRegex)
-        Me.gbRegex.Location = New System.Drawing.Point(9, 255)
+        Me.gbRegex.Location = New System.Drawing.Point(9, 325)
         Me.gbRegex.Name = "gbRegex"
-        Me.gbRegex.Size = New System.Drawing.Size(596, 173)
+        Me.gbRegex.Size = New System.Drawing.Size(751, 146)
         Me.gbRegex.TabIndex = 50
         Me.gbRegex.TabStop = False
         Me.gbRegex.Text = "Regular Expression"
@@ -652,7 +690,7 @@ Partial Class FormBetter
         Me.Label17.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.Label17.AutoSize = True
         Me.Label17.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
-        Me.Label17.Location = New System.Drawing.Point(6, 121)
+        Me.Label17.Location = New System.Drawing.Point(6, 94)
         Me.Label17.Name = "Label17"
         Me.Label17.Size = New System.Drawing.Size(475, 39)
         Me.Label17.TabIndex = 48
@@ -663,7 +701,7 @@ Partial Class FormBetter
         '
         Me.Label20.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.Label20.AutoSize = True
-        Me.Label20.Location = New System.Drawing.Point(142, 437)
+        Me.Label20.Location = New System.Drawing.Point(142, 495)
         Me.Label20.Name = "Label20"
         Me.Label20.Size = New System.Drawing.Size(190, 13)
         Me.Label20.TabIndex = 45
@@ -693,15 +731,16 @@ Partial Class FormBetter
         Me.TabPage2.Location = New System.Drawing.Point(4, 22)
         Me.TabPage2.Name = "TabPage2"
         Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage2.Size = New System.Drawing.Size(863, 473)
+        Me.TabPage2.Size = New System.Drawing.Size(782, 531)
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "Destination"
         Me.TabPage2.UseVisualStyleBackColor = True
         '
         'Label24
         '
+        Me.Label24.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Label24.AutoSize = True
-        Me.Label24.Location = New System.Drawing.Point(594, 125)
+        Me.Label24.Location = New System.Drawing.Point(632, 125)
         Me.Label24.Name = "Label24"
         Me.Label24.Size = New System.Drawing.Size(112, 13)
         Me.Label24.TabIndex = 54
@@ -718,9 +757,10 @@ Partial Class FormBetter
         '
         'ddConnectionType
         '
+        Me.ddConnectionType.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.ddConnectionType.FormattingEnabled = True
         Me.ddConnectionType.Items.AddRange(New Object() {"SQL", "SQLite", "MySql", "Oracle"})
-        Me.ddConnectionType.Location = New System.Drawing.Point(772, 16)
+        Me.ddConnectionType.Location = New System.Drawing.Point(659, 16)
         Me.ddConnectionType.Name = "ddConnectionType"
         Me.ddConnectionType.Size = New System.Drawing.Size(85, 21)
         Me.ddConnectionType.TabIndex = 52
@@ -748,11 +788,13 @@ Partial Class FormBetter
         '
         'TextBox1
         '
+        Me.TextBox1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.TextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None
         Me.TextBox1.Location = New System.Drawing.Point(106, 42)
         Me.TextBox1.Name = "TextBox1"
         Me.TextBox1.ReadOnly = True
-        Me.TextBox1.Size = New System.Drawing.Size(651, 13)
+        Me.TextBox1.Size = New System.Drawing.Size(538, 13)
         Me.TextBox1.TabIndex = 49
         Me.TextBox1.TabStop = False
         Me.TextBox1.Text = "Data Source=SERVER;Initial Catalog=DATABASE;Integrated Security=True"
@@ -787,19 +829,20 @@ Partial Class FormBetter
         Me.TabPage3.Controls.Add(Me.Label13)
         Me.TabPage3.Location = New System.Drawing.Point(4, 22)
         Me.TabPage3.Name = "TabPage3"
-        Me.TabPage3.Size = New System.Drawing.Size(863, 473)
+        Me.TabPage3.Size = New System.Drawing.Size(782, 531)
         Me.TabPage3.TabIndex = 2
         Me.TabPage3.Text = "Scripts"
         Me.TabPage3.UseVisualStyleBackColor = True
         '
         'GroupBox1
         '
+        Me.GroupBox1.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.GroupBox1.Controls.Add(Me.Label26)
         Me.GroupBox1.Controls.Add(Me.Button8)
         Me.GroupBox1.Controls.Add(Me.Label25)
         Me.GroupBox1.Controls.Add(Me.cbScriptLang)
         Me.GroupBox1.Controls.Add(Me.cbScript)
-        Me.GroupBox1.Location = New System.Drawing.Point(634, 3)
+        Me.GroupBox1.Location = New System.Drawing.Point(549, 3)
         Me.GroupBox1.Name = "GroupBox1"
         Me.GroupBox1.Size = New System.Drawing.Size(224, 137)
         Me.GroupBox1.TabIndex = 46
@@ -855,9 +898,11 @@ Partial Class FormBetter
         '
         'tbperRowValues
         '
+        Me.tbperRowValues.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tbperRowValues.Location = New System.Drawing.Point(126, 15)
         Me.tbperRowValues.Name = "tbperRowValues"
-        Me.tbperRowValues.Size = New System.Drawing.Size(409, 20)
+        Me.tbperRowValues.Size = New System.Drawing.Size(324, 20)
         Me.tbperRowValues.TabIndex = 39
         '
         'Label8
@@ -871,7 +916,8 @@ Partial Class FormBetter
         '
         'Button7
         '
-        Me.Button7.Location = New System.Drawing.Point(551, 13)
+        Me.Button7.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Button7.Location = New System.Drawing.Point(466, 13)
         Me.Button7.Name = "Button7"
         Me.Button7.Size = New System.Drawing.Size(75, 23)
         Me.Button7.TabIndex = 41
@@ -880,7 +926,8 @@ Partial Class FormBetter
         '
         'Button6
         '
-        Me.Button6.Location = New System.Drawing.Point(551, 65)
+        Me.Button6.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Button6.Location = New System.Drawing.Point(466, 65)
         Me.Button6.Name = "Button6"
         Me.Button6.Size = New System.Drawing.Size(75, 23)
         Me.Button6.TabIndex = 38
@@ -889,7 +936,8 @@ Partial Class FormBetter
         '
         'Button5
         '
-        Me.Button5.Location = New System.Drawing.Point(551, 91)
+        Me.Button5.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Button5.Location = New System.Drawing.Point(466, 91)
         Me.Button5.Name = "Button5"
         Me.Button5.Size = New System.Drawing.Size(75, 23)
         Me.Button5.TabIndex = 37
@@ -902,7 +950,7 @@ Partial Class FormBetter
         Me.TabPage4.Controls.Add(Me.lblRunInfo)
         Me.TabPage4.Location = New System.Drawing.Point(4, 22)
         Me.TabPage4.Name = "TabPage4"
-        Me.TabPage4.Size = New System.Drawing.Size(863, 473)
+        Me.TabPage4.Size = New System.Drawing.Size(807, 531)
         Me.TabPage4.TabIndex = 3
         Me.TabPage4.Text = "Help"
         Me.TabPage4.UseVisualStyleBackColor = True
@@ -911,18 +959,100 @@ Partial Class FormBetter
         '
         Me.cbShowStack.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.cbShowStack.AutoSize = True
-        Me.cbShowStack.Location = New System.Drawing.Point(114, 542)
+        Me.cbShowStack.Location = New System.Drawing.Point(114, 600)
         Me.cbShowStack.Name = "cbShowStack"
         Me.cbShowStack.Size = New System.Drawing.Size(148, 17)
         Me.cbShowStack.TabIndex = 48
         Me.cbShowStack.Text = "Show Stacktrace in errors"
         Me.cbShowStack.UseVisualStyleBackColor = True
         '
+        'gbODBC
+        '
+        Me.gbODBC.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.gbODBC.Controls.Add(Me.lblDefaultodbc)
+        Me.gbODBC.Controls.Add(Me.tbtestODBC)
+        Me.gbODBC.Controls.Add(Me.Label29)
+        Me.gbODBC.Controls.Add(Me.Label28)
+        Me.gbODBC.Controls.Add(Me.tbODBCTable)
+        Me.gbODBC.Controls.Add(Me.Label27)
+        Me.gbODBC.Controls.Add(Me.tbODBCConnection)
+        Me.gbODBC.Location = New System.Drawing.Point(9, 220)
+        Me.gbODBC.Name = "gbODBC"
+        Me.gbODBC.Size = New System.Drawing.Size(751, 99)
+        Me.gbODBC.TabIndex = 53
+        Me.gbODBC.TabStop = False
+        Me.gbODBC.Text = "ODBC Options"
+        '
+        'Label27
+        '
+        Me.Label27.AutoSize = True
+        Me.Label27.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
+        Me.Label27.Location = New System.Drawing.Point(6, 16)
+        Me.Label27.Name = "Label27"
+        Me.Label27.Size = New System.Drawing.Size(91, 13)
+        Me.Label27.TabIndex = 47
+        Me.Label27.Text = "Connection String"
+        '
+        'tbODBCConnection
+        '
+        Me.tbODBCConnection.Location = New System.Drawing.Point(103, 13)
+        Me.tbODBCConnection.Name = "tbODBCConnection"
+        Me.tbODBCConnection.Size = New System.Drawing.Size(357, 20)
+        Me.tbODBCConnection.TabIndex = 46
+        '
+        'Label28
+        '
+        Me.Label28.AutoSize = True
+        Me.Label28.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
+        Me.Label28.Location = New System.Drawing.Point(10, 58)
+        Me.Label28.Name = "Label28"
+        Me.Label28.Size = New System.Drawing.Size(65, 13)
+        Me.Label28.TabIndex = 49
+        Me.Label28.Text = "Table Name"
+        '
+        'tbODBCTable
+        '
+        Me.tbODBCTable.Location = New System.Drawing.Point(81, 55)
+        Me.tbODBCTable.Name = "tbODBCTable"
+        Me.tbODBCTable.Size = New System.Drawing.Size(144, 20)
+        Me.tbODBCTable.TabIndex = 48
+        '
+        'Label29
+        '
+        Me.Label29.AutoSize = True
+        Me.Label29.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
+        Me.Label29.Location = New System.Drawing.Point(466, 16)
+        Me.Label29.Name = "Label29"
+        Me.Label29.Size = New System.Drawing.Size(48, 13)
+        Me.Label29.TabIndex = 50
+        Me.Label29.Text = "*optional"
+        '
+        'tbtestODBC
+        '
+        Me.tbtestODBC.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.tbtestODBC.Location = New System.Drawing.Point(605, 70)
+        Me.tbtestODBC.Name = "tbtestODBC"
+        Me.tbtestODBC.Size = New System.Drawing.Size(140, 23)
+        Me.tbtestODBC.TabIndex = 50
+        Me.tbtestODBC.Text = "Test ODBC Connection"
+        Me.tbtestODBC.UseVisualStyleBackColor = True
+        '
+        'lblDefaultodbc
+        '
+        Me.lblDefaultodbc.AutoSize = True
+        Me.lblDefaultodbc.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
+        Me.lblDefaultodbc.Location = New System.Drawing.Point(102, 35)
+        Me.lblDefaultodbc.Name = "lblDefaultodbc"
+        Me.lblDefaultodbc.Size = New System.Drawing.Size(22, 13)
+        Me.lblDefaultodbc.TabIndex = 51
+        Me.lblDefaultodbc.Text = "def"
+        '
         'FormBetter
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(881, 563)
+        Me.ClientSize = New System.Drawing.Size(804, 621)
         Me.Controls.Add(Me.cbShowStack)
         Me.Controls.Add(Me.TabControl1)
         Me.Controls.Add(Me.Button4)
@@ -950,6 +1080,8 @@ Partial Class FormBetter
         Me.GroupBox1.PerformLayout()
         Me.TabPage4.ResumeLayout(False)
         Me.TabPage4.PerformLayout()
+        Me.gbODBC.ResumeLayout(False)
+        Me.gbODBC.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -1037,4 +1169,12 @@ Partial Class FormBetter
     Friend WithEvents cbScriptLang As ComboBox
     Friend WithEvents cbScript As ComboBox
     Friend WithEvents SaveFileDialogScriptSamp As SaveFileDialog
+    Friend WithEvents gbODBC As GroupBox
+    Friend WithEvents Label28 As Label
+    Friend WithEvents tbODBCTable As TextBox
+    Friend WithEvents Label27 As Label
+    Friend WithEvents tbODBCConnection As TextBox
+    Friend WithEvents Label29 As Label
+    Friend WithEvents tbtestODBC As Button
+    Friend WithEvents lblDefaultodbc As Label
 End Class
