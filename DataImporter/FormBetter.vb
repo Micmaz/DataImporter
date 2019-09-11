@@ -15,8 +15,8 @@
                 MsgBox("You uneed to select a valid input file.")
                 Return False
             End If
-
         End If
+
         If di IsNot Nothing Then
             If di.WaitingMessage1 IsNot Nothing Then
                 di.WaitingMessage1.Dispose()

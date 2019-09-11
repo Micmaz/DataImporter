@@ -115,11 +115,15 @@ Public Class DataImporter
 	Public Property dateFormats As String() = New String() {"dd/MM/yyyy", "dd/M/yyyy", "d/M/yyyy", "d/MM/yyyy", "dd/MM/yy", "dd/M/yy", "d/M/yy", "d/MM/yy", "yyyyMMdd"}
     Public Property odbcConnectionString As String = Nothing
     Public Property odbcTableName As String = Nothing
+    Public Property errorDetailsCt As Integer = 0
+
     Public Const defaultODBCConnection As String = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};User Id=admin;Password=;"
     Public Const defaultXLSXConnection As String = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};Extended Properties=""Excel 12.0;HDR=NO"""
     Public Const defaultXLSConnection As String = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Extended Properties=""Excel 8.0;IMEX=1;HDR=NO"""
+
+
     Private _mydateFormats As String = ""
-	Public Property dateFormatList As String
+    Public Property dateFormatList As String
 		Get
 			Return _mydateFormats
 		End Get
@@ -408,6 +412,7 @@ Public Class DataImporter
 		updateCount = 0
         deleteCount = 0
         processedCount = 0
+        errorDetailsCt = 0
         importStartedDate = Date.Now
 
 
@@ -690,59 +695,49 @@ Public Class DataImporter
 			End Try
 			count += 1
 			If count = batchsize Then
-				Try
-					updateCounts(dt)
-					runscriptfile(processTableScript, New Object() {dt, Me}, "ProcessRow.inputTable")
-					If simulate Then
-						Return True
-					Else
-						da.Update(dt)
-					End If
-				Catch ex As Exception
-					logerror(ex, "Error updating database")
-				End Try
-				count = 0
+                If doUpdate(dt, da) Then Return True
+                count = 0
 			End If
 		End While
 
-		updateCounts(dt)
+        If doUpdate(dt, da) Then Return True
 
-		Try
-			da.Update(dt)
-		Catch ex As Exception
-			logerror(ex, "Error updating database")
-		End Try
-
-		setStatusSummary()
+        setStatusSummary()
 		If simulate Then Return True
-		Try
-			If (completedSQL IsNot Nothing AndAlso completedSQL <> "") Then
-				sqlhelper.ExecuteNonQuery(completedSQL)
-			End If
-		Catch ex As Exception
-			logerror(ex, "Error executing compleatedSQL after import")
-		End Try
+        Try
+            If (completedSQL IsNot Nothing AndAlso completedSQL <> "") Then
+                sqlhelper.ExecuteNonQuery(completedSQL)
+            End If
+        Catch ex As Exception
+            logerror(ex, "Error executing compleatedSQL after import")
+        End Try
 
-		If dt.GetErrors().Length > 0 Then
-			Dim errorRows = dt.GetErrors()
-			statusList &= "Error Rows:  " & dt.GetErrors().Length & vbCrLf
-			logerror(New Exception(dt.GetErrors()(0).RowError), "There are " & dt.GetErrors().Length & " Rows with errors durring the insert/update process.")
-			For Each row In errorRows
-				Dim colerrors = getColErrors(row)
-				'For Each col In row.GetColumnsInError()
-				'	colerrors &= col.ColumnName & " : " & row.GetColumnError(row.Table.Columns.IndexOf(col)) & vbCrLf
-				'Next
-				logerror(New Exception(colerrors), "Row number: " & dt.Rows.IndexOf(row) & " Has error: " & row.RowError, dt.Rows.IndexOf(row))
-			Next
-
-
-		End If
-
-		Return True
+        Return True
 
 	End Function
 
-	Private Function setStatusSummary() As Boolean
+    'returns false under normal conditions. True for simulate only.
+    Private Function doUpdate(ByRef dt As DataTable, ByRef da As Common.DbDataAdapter) As Boolean
+        Try
+            updateCounts(dt)
+            runscriptfile(processTableScript, New Object() {dt, Me}, "ProcessRow.inputTable")
+            If simulate Then
+                Return True
+            Else
+                da.Update(dt)
+                getTableErrors(dt, da)
+            End If
+            'Dim errors = dt.GetErrors()
+            'If errors.Length > 0 Then
+
+            'End If
+        Catch ex As Exception
+            logerror(ex, "Error updating database")
+        End Try
+        Return False
+    End Function
+
+    Private Function setStatusSummary() As Boolean
 		Try
             statusList &= "Table:          " & tableName & vbCrLf
             statusList &= "Processed Rows: " & processedCount & vbCrLf
@@ -775,34 +770,78 @@ Public Class DataImporter
 	End Function
 
 
-	Public Function getColErrors(dr As DataRow) As String
-		Dim assembly__1 As Assembly = Assembly.LoadFrom("C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Data.dll")
-		Dim type As Type = assembly__1.[GetType]("System.Data.ConstraintEnumerator")
-		Dim out = ""
-		For Each column As DataColumn In dr.Table.Columns
-			Dim columnType As Type = column.[GetType]()
-			Dim bfInternal As BindingFlags = BindingFlags.Instance Or BindingFlags.NonPublic
+    Public Function getTableErrors(dt As DataTable, da As System.Data.Common.DbDataAdapter) As String
+        Dim errorRows = dt.GetErrors()
+        If errorDetailsCt > 0 Then
+            statusList &= "Error Rows:  " & dt.GetErrors().Length & vbCrLf
+            logerror(New Exception(dt.GetErrors()(0).RowError), "There are " & dt.GetErrors().Length & " Rows with errors durring the insert/update process. Logs will only show the SQL statements for the first 10.")
+        End If
+        For Each row In errorRows
+            Dim colerrors = vbCrLf
+            'Dim colerrors = getColErrors(row) & vbCrLf
+            If errorDetailsCt < 10 Then
+                For Each col As DataColumn In dt.Columns
+                    Dim typename = "nvarchar(max)"
+                    Dim val = row(col).ToString()
+                    val = val.Replace("'", "''")
+                    typename = col.DataType.ToString
+                    typename = typename.Replace("System.", "")
+                    If typename.StartsWith("Int") Then
+                        typename = "int"
+                    ElseIf typename.StartsWith("Double") Then
+                        typename = "float"
+                    ElseIf typename.StartsWith("Date") Then
+                        If val <> "" Then val = "'" + val + "'"
+                    ElseIf typename = "String" Then
+                        val = "'" & val & "'"
+                        typename = "nvarchar(max)"
+                    End If
+                    If val = "" Then val = "null"
+                    colerrors &= "DECLARE @" & col.ColumnName & " " & typename & " = " & val & ";" & vbCrLf
+                Next
+                If row.RowState = DataRowState.Added Then
+                    colerrors &= da.InsertCommand.CommandText & vbCrLf
+                Else
+                    colerrors &= da.UpdateCommand.CommandText & vbCrLf
+                End If
 
-			Dim flag As Boolean = False
-			If Not column.AllowDBNull Then
-				Dim m_IsNotAllowDBNullViolated As MethodInfo = columnType.GetMethod("IsNotAllowDBNullViolated", bfInternal)
-				flag = CBool(m_IsNotAllowDBNullViolated.Invoke(column, Nothing))
-				If flag Then
-					out &= "DBnull violated  --> ColumnName: " + column.ColumnName + ", tableName: " + column.Table.TableName
-				End If
-			End If
-			If column.MaxLength >= 0 Then
-				Dim m_IsMaxLengthViolated As MethodInfo = columnType.GetMethod("IsMaxLengthViolated", bfInternal)
-				flag = CBool(m_IsMaxLengthViolated.Invoke(column, Nothing))
-				If flag Then
-					out &= "MaxLength violated --> ColumnName: " + column.ColumnName + ", tableName: " + column.Table.TableName
-				End If
-			End If
-		Next
-		Return out
-	End Function
+                For Each col In row.GetColumnsInError()
+                    colerrors &= col.ColumnName & " : " & row.GetColumnError(row.Table.Columns.IndexOf(col)) & vbCrLf
+                Next
+            End If
+            errorDetailsCt += 1
+            logerror(New Exception(colerrors), "Row number: " & dt.Rows.IndexOf(row) & " Has error: " & row.RowError, dt.Rows.IndexOf(row))
+        Next
+    End Function
 
-	Private Function updateCounts(dt As DataTable) As Boolean
+    '   Public Function getColErrors(dr As DataRow) As String
+    '       Dim out = ""
+    '       Dim assembly__1 As Assembly = Assembly.LoadFrom("C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Data.dll")
+    '       Dim type As Type = assembly__1.[GetType]("System.Data.ConstraintEnumerator")
+    '       For Each column As DataColumn In dr.Table.Columns
+    '		Dim columnType As Type = column.[GetType]()
+    '		Dim bfInternal As BindingFlags = BindingFlags.Instance Or BindingFlags.NonPublic
+
+    '		Dim flag As Boolean = False
+    '		If Not column.AllowDBNull Then
+    '			Dim m_IsNotAllowDBNullViolated As MethodInfo = columnType.GetMethod("IsNotAllowDBNullViolated", bfInternal)
+    '			flag = CBool(m_IsNotAllowDBNullViolated.Invoke(column, Nothing))
+    '			If flag Then
+    '				out &= "DBnull violated  --> ColumnName: " + column.ColumnName + ", tableName: " + column.Table.TableName
+    '			End If
+    '		End If
+    '		If column.MaxLength >= 0 Then
+    '			Dim m_IsMaxLengthViolated As MethodInfo = columnType.GetMethod("IsMaxLengthViolated", bfInternal)
+    '			flag = CBool(m_IsMaxLengthViolated.Invoke(column, Nothing))
+    '			If flag Then
+    '				out &= "MaxLength violated --> ColumnName: " + column.ColumnName + ", tableName: " + column.Table.TableName
+    '			End If
+    '		End If
+    '	Next
+    '	Return out
+    'End Function
+
+    Private Function updateCounts(dt As DataTable) As Boolean
 		Dim dv As New DataView(dt)
 		dv.RowStateFilter = DataViewRowState.Added
 		insertCount += dv.Count
