@@ -75,6 +75,15 @@ Partial Class FormBetter
         Me.tbDateFormat = New System.Windows.Forms.TextBox()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
+        Me.gbODBC = New System.Windows.Forms.GroupBox()
+        Me.lblDefaultodbc = New System.Windows.Forms.TextBox()
+        Me.Label30 = New System.Windows.Forms.Label()
+        Me.tbtestODBC = New System.Windows.Forms.Button()
+        Me.Label29 = New System.Windows.Forms.Label()
+        Me.Label28 = New System.Windows.Forms.Label()
+        Me.tbODBCTable = New System.Windows.Forms.TextBox()
+        Me.Label27 = New System.Windows.Forms.Label()
+        Me.tbODBCConnection = New System.Windows.Forms.TextBox()
         Me.gbExcel = New System.Windows.Forms.GroupBox()
         Me.Label21 = New System.Windows.Forms.Label()
         Me.tbWorkbookNum = New System.Windows.Forms.TextBox()
@@ -107,16 +116,9 @@ Partial Class FormBetter
         Me.TabPage4 = New System.Windows.Forms.TabPage()
         Me.cbShowStack = New System.Windows.Forms.CheckBox()
         Me.SaveFileDialogScriptSamp = New System.Windows.Forms.SaveFileDialog()
-        Me.gbODBC = New System.Windows.Forms.GroupBox()
-        Me.Label27 = New System.Windows.Forms.Label()
-        Me.tbODBCConnection = New System.Windows.Forms.TextBox()
-        Me.Label28 = New System.Windows.Forms.Label()
-        Me.tbODBCTable = New System.Windows.Forms.TextBox()
-        Me.Label29 = New System.Windows.Forms.Label()
-        Me.tbtestODBC = New System.Windows.Forms.Button()
-        Me.lblDefaultodbc = New System.Windows.Forms.Label()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
+        Me.gbODBC.SuspendLayout()
         Me.gbExcel.SuspendLayout()
         Me.gbDelimiters.SuspendLayout()
         Me.gbRegex.SuspendLayout()
@@ -124,7 +126,6 @@ Partial Class FormBetter
         Me.TabPage3.SuspendLayout()
         Me.GroupBox1.SuspendLayout()
         Me.TabPage4.SuspendLayout()
-        Me.gbODBC.SuspendLayout()
         Me.SuspendLayout()
         '
         'tbFileName
@@ -606,6 +607,103 @@ Partial Class FormBetter
         Me.TabPage1.Text = "Source"
         Me.TabPage1.UseVisualStyleBackColor = True
         '
+        'gbODBC
+        '
+        Me.gbODBC.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.gbODBC.Controls.Add(Me.lblDefaultodbc)
+        Me.gbODBC.Controls.Add(Me.Label30)
+        Me.gbODBC.Controls.Add(Me.tbtestODBC)
+        Me.gbODBC.Controls.Add(Me.Label29)
+        Me.gbODBC.Controls.Add(Me.Label28)
+        Me.gbODBC.Controls.Add(Me.tbODBCTable)
+        Me.gbODBC.Controls.Add(Me.Label27)
+        Me.gbODBC.Controls.Add(Me.tbODBCConnection)
+        Me.gbODBC.Location = New System.Drawing.Point(9, 220)
+        Me.gbODBC.Name = "gbODBC"
+        Me.gbODBC.Size = New System.Drawing.Size(751, 99)
+        Me.gbODBC.TabIndex = 53
+        Me.gbODBC.TabStop = False
+        Me.gbODBC.Text = "ODBC Options"
+        '
+        'lblDefaultodbc
+        '
+        Me.lblDefaultodbc.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.lblDefaultodbc.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.lblDefaultodbc.Location = New System.Drawing.Point(104, 35)
+        Me.lblDefaultodbc.Name = "lblDefaultodbc"
+        Me.lblDefaultodbc.ReadOnly = True
+        Me.lblDefaultodbc.Size = New System.Drawing.Size(538, 13)
+        Me.lblDefaultodbc.TabIndex = 53
+        Me.lblDefaultodbc.TabStop = False
+        Me.lblDefaultodbc.Text = "def"
+        '
+        'Label30
+        '
+        Me.Label30.AutoSize = True
+        Me.Label30.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
+        Me.Label30.Location = New System.Drawing.Point(6, 71)
+        Me.Label30.Name = "Label30"
+        Me.Label30.Size = New System.Drawing.Size(88, 13)
+        Me.Label30.TabIndex = 52
+        Me.Label30.Text = "Select Statement"
+        '
+        'tbtestODBC
+        '
+        Me.tbtestODBC.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.tbtestODBC.Location = New System.Drawing.Point(605, 70)
+        Me.tbtestODBC.Name = "tbtestODBC"
+        Me.tbtestODBC.Size = New System.Drawing.Size(140, 23)
+        Me.tbtestODBC.TabIndex = 50
+        Me.tbtestODBC.Text = "Test ODBC Connection"
+        Me.tbtestODBC.UseVisualStyleBackColor = True
+        '
+        'Label29
+        '
+        Me.Label29.AutoSize = True
+        Me.Label29.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
+        Me.Label29.Location = New System.Drawing.Point(466, 16)
+        Me.Label29.Name = "Label29"
+        Me.Label29.Size = New System.Drawing.Size(48, 13)
+        Me.Label29.TabIndex = 50
+        Me.Label29.Text = "*optional"
+        '
+        'Label28
+        '
+        Me.Label28.AutoSize = True
+        Me.Label28.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
+        Me.Label28.Location = New System.Drawing.Point(6, 54)
+        Me.Label28.Name = "Label28"
+        Me.Label28.Size = New System.Drawing.Size(77, 13)
+        Me.Label28.TabIndex = 49
+        Me.Label28.Text = "Table Name or"
+        '
+        'tbODBCTable
+        '
+        Me.tbODBCTable.Location = New System.Drawing.Point(103, 51)
+        Me.tbODBCTable.Multiline = True
+        Me.tbODBCTable.Name = "tbODBCTable"
+        Me.tbODBCTable.Size = New System.Drawing.Size(400, 42)
+        Me.tbODBCTable.TabIndex = 48
+        '
+        'Label27
+        '
+        Me.Label27.AutoSize = True
+        Me.Label27.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
+        Me.Label27.Location = New System.Drawing.Point(6, 16)
+        Me.Label27.Name = "Label27"
+        Me.Label27.Size = New System.Drawing.Size(91, 13)
+        Me.Label27.TabIndex = 47
+        Me.Label27.Text = "Connection String"
+        '
+        'tbODBCConnection
+        '
+        Me.tbODBCConnection.Location = New System.Drawing.Point(103, 13)
+        Me.tbODBCConnection.Name = "tbODBCConnection"
+        Me.tbODBCConnection.Size = New System.Drawing.Size(357, 20)
+        Me.tbODBCConnection.TabIndex = 46
+        '
         'gbExcel
         '
         Me.gbExcel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
@@ -950,7 +1048,7 @@ Partial Class FormBetter
         Me.TabPage4.Controls.Add(Me.lblRunInfo)
         Me.TabPage4.Location = New System.Drawing.Point(4, 22)
         Me.TabPage4.Name = "TabPage4"
-        Me.TabPage4.Size = New System.Drawing.Size(807, 531)
+        Me.TabPage4.Size = New System.Drawing.Size(782, 531)
         Me.TabPage4.TabIndex = 3
         Me.TabPage4.Text = "Help"
         Me.TabPage4.UseVisualStyleBackColor = True
@@ -965,88 +1063,6 @@ Partial Class FormBetter
         Me.cbShowStack.TabIndex = 48
         Me.cbShowStack.Text = "Show Stacktrace in errors"
         Me.cbShowStack.UseVisualStyleBackColor = True
-        '
-        'gbODBC
-        '
-        Me.gbODBC.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.gbODBC.Controls.Add(Me.lblDefaultodbc)
-        Me.gbODBC.Controls.Add(Me.tbtestODBC)
-        Me.gbODBC.Controls.Add(Me.Label29)
-        Me.gbODBC.Controls.Add(Me.Label28)
-        Me.gbODBC.Controls.Add(Me.tbODBCTable)
-        Me.gbODBC.Controls.Add(Me.Label27)
-        Me.gbODBC.Controls.Add(Me.tbODBCConnection)
-        Me.gbODBC.Location = New System.Drawing.Point(9, 220)
-        Me.gbODBC.Name = "gbODBC"
-        Me.gbODBC.Size = New System.Drawing.Size(751, 99)
-        Me.gbODBC.TabIndex = 53
-        Me.gbODBC.TabStop = False
-        Me.gbODBC.Text = "ODBC Options"
-        '
-        'Label27
-        '
-        Me.Label27.AutoSize = True
-        Me.Label27.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
-        Me.Label27.Location = New System.Drawing.Point(6, 16)
-        Me.Label27.Name = "Label27"
-        Me.Label27.Size = New System.Drawing.Size(91, 13)
-        Me.Label27.TabIndex = 47
-        Me.Label27.Text = "Connection String"
-        '
-        'tbODBCConnection
-        '
-        Me.tbODBCConnection.Location = New System.Drawing.Point(103, 13)
-        Me.tbODBCConnection.Name = "tbODBCConnection"
-        Me.tbODBCConnection.Size = New System.Drawing.Size(357, 20)
-        Me.tbODBCConnection.TabIndex = 46
-        '
-        'Label28
-        '
-        Me.Label28.AutoSize = True
-        Me.Label28.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
-        Me.Label28.Location = New System.Drawing.Point(10, 58)
-        Me.Label28.Name = "Label28"
-        Me.Label28.Size = New System.Drawing.Size(65, 13)
-        Me.Label28.TabIndex = 49
-        Me.Label28.Text = "Table Name"
-        '
-        'tbODBCTable
-        '
-        Me.tbODBCTable.Location = New System.Drawing.Point(81, 55)
-        Me.tbODBCTable.Name = "tbODBCTable"
-        Me.tbODBCTable.Size = New System.Drawing.Size(144, 20)
-        Me.tbODBCTable.TabIndex = 48
-        '
-        'Label29
-        '
-        Me.Label29.AutoSize = True
-        Me.Label29.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
-        Me.Label29.Location = New System.Drawing.Point(466, 16)
-        Me.Label29.Name = "Label29"
-        Me.Label29.Size = New System.Drawing.Size(48, 13)
-        Me.Label29.TabIndex = 50
-        Me.Label29.Text = "*optional"
-        '
-        'tbtestODBC
-        '
-        Me.tbtestODBC.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.tbtestODBC.Location = New System.Drawing.Point(605, 70)
-        Me.tbtestODBC.Name = "tbtestODBC"
-        Me.tbtestODBC.Size = New System.Drawing.Size(140, 23)
-        Me.tbtestODBC.TabIndex = 50
-        Me.tbtestODBC.Text = "Test ODBC Connection"
-        Me.tbtestODBC.UseVisualStyleBackColor = True
-        '
-        'lblDefaultodbc
-        '
-        Me.lblDefaultodbc.AutoSize = True
-        Me.lblDefaultodbc.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
-        Me.lblDefaultodbc.Location = New System.Drawing.Point(102, 35)
-        Me.lblDefaultodbc.Name = "lblDefaultodbc"
-        Me.lblDefaultodbc.Size = New System.Drawing.Size(22, 13)
-        Me.lblDefaultodbc.TabIndex = 51
-        Me.lblDefaultodbc.Text = "def"
         '
         'FormBetter
         '
@@ -1066,6 +1082,8 @@ Partial Class FormBetter
         Me.TabControl1.ResumeLayout(False)
         Me.TabPage1.ResumeLayout(False)
         Me.TabPage1.PerformLayout()
+        Me.gbODBC.ResumeLayout(False)
+        Me.gbODBC.PerformLayout()
         Me.gbExcel.ResumeLayout(False)
         Me.gbExcel.PerformLayout()
         Me.gbDelimiters.ResumeLayout(False)
@@ -1080,8 +1098,6 @@ Partial Class FormBetter
         Me.GroupBox1.PerformLayout()
         Me.TabPage4.ResumeLayout(False)
         Me.TabPage4.PerformLayout()
-        Me.gbODBC.ResumeLayout(False)
-        Me.gbODBC.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -1176,5 +1192,6 @@ Partial Class FormBetter
     Friend WithEvents tbODBCConnection As TextBox
     Friend WithEvents Label29 As Label
     Friend WithEvents tbtestODBC As Button
-    Friend WithEvents lblDefaultodbc As Label
+    Friend WithEvents lblDefaultodbc As TextBox
+    Friend WithEvents Label30 As Label
 End Class
