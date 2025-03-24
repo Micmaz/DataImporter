@@ -1,2 +1,1 @@
-﻿DTIControls
-SQLitehelper
+﻿SQLitehelper

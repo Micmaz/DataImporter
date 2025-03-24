@@ -5,6 +5,7 @@ Imports System.Reflection
 Imports System.ComponentModel
 Imports System.Globalization
 Imports System.Data.OleDb
+Imports System.IO.Compression
 
 Public Class DataImporter
     Inherits Component
@@ -367,23 +368,26 @@ Public Class DataImporter
                 fileFormat = Format.csv
                 If lowername.EndsWith("json") Then fileFormat = Format.json
                 If Not String.IsNullOrWhiteSpace(regExCapture) Then fileFormat = Format.regex
+
+
             End If
 
             Dim inputTable As DataTable = Nothing
             Try
-                If lowername.EndsWith("xls") OrElse lowername.EndsWith("xlsx") Then
-                    inputTable = ConvertExcelToTable(fileName, excelWorksheetNumber)
-                    fileFormat = Format.excel
-                End If
                 If Not String.IsNullOrEmpty(odbcTableName) Then
+                    fileFormat = Format.odbc
                     If Not String.IsNullOrEmpty(odbcConnectionString) Then
                         inputTable = ConvertODBCToTable(fileName, odbcTableName, odbcConnectionString)
                     Else
                         inputTable = ConvertODBCToTable(fileName, odbcTableName)
                     End If
                 End If
+                If inputTable Is Nothing AndAlso (lowername.EndsWith("xls") OrElse lowername.EndsWith("xlsx")) Then
+                    inputTable = ConvertExcelToTable(fileName, excelWorksheetNumber)
+                    fileFormat = Format.excel
+                End If
             Catch ex As Exception
-
+                logerror(ex)
             End Try
 
 
@@ -472,8 +476,8 @@ Public Class DataImporter
             End If
             If fileFormat <> Format.odbc Then fileFormat = Format.excel
             runscriptfile(processInputScriptFile, New Object() {inputTable, Me}, "ProcessRow.inputFile")
-            Else
-                runscriptfile(processInputScriptFile, New Object() {fileContents, Me}, "ProcessRow.inputFile")
+        Else
+            runscriptfile(processInputScriptFile, New Object() {fileContents, Me}, "ProcessRow.inputFile")
         End If
 
         'Create the parsers/ list the lines etc here
@@ -505,6 +509,7 @@ Public Class DataImporter
         End Try
 
         If columnNames IsNot Nothing AndAlso columnNames.Length > 0 Then
+            ''FIX remove [ ] chars after parsing from col name list
             editCols = ParseDelimited(columnNames)
         Else
             If fileFormat = Format.csv Then editCols = parser.ReadFields()
@@ -570,7 +575,7 @@ Public Class DataImporter
                 If createIfMissing AndAlso fileFormat = Format.json Then createTableFromJsonString(fileContents, tableName)
                 If createIfMissing AndAlso fileFormat = Format.csv Then createTableFromCSVCols(fileContents, editCols, tableName)
                 If createIfMissing AndAlso fileFormat = Format.regex Then createTableFromRegexCols(fileContents, editCols, tableName)
-                If createIfMissing AndAlso fileFormat = Format.excel Then createTableFromExcelInputTbl(inputTable, tableName)
+                If createIfMissing AndAlso fileFormat = Format.excel Then createTableFromInputTbl(inputTable, tableName)
                 sqlhelper.FillDataTable("select top 1 * from " & tableName, dt)
             End If
         End Try
@@ -1069,7 +1074,7 @@ Public Class DataImporter
                         priCols(y) = dt.Columns(prikeys(y))
                     Next
                     dt.PrimaryKey = priCols
-                    sqlhelper.checkAndCreateTable(dt)
+                    createTableFromInputTbl(dt, tablename)
                 End If
             Catch ex1 As Exception
                 logerror(ex1)
@@ -1214,18 +1219,7 @@ Public Class DataImporter
         Next
         parseIntoTable(fileContents, editCols, dt, False)
 
-        For Each col As DataColumn In dt.Columns
-            If col.DataType Is GetType(String) Then
-                Dim maxlen As Integer = -1
-                For Each r As DataRow In dt.Rows
-                    If maxlen < r(col).ToString().Length Then maxlen = r(col).ToString().Length
-                Next
-                If maxlen > -1 Then maxlen = maxlen * 1.5
-                col.MaxLength = maxlen
-            End If
-        Next
-        CreateIDCol(dt)
-        Return sqlhelper.checkAndCreateTable(dt)
+        createTableFromInputTbl(dt, tablename)
 
     End Function
 
@@ -1245,7 +1239,7 @@ Public Class DataImporter
         End If
     End Sub
 
-    Public Function createTableFromExcelInputTbl(dt As DataTable, tablename As String) As Boolean
+    Public Function createTableFromInputTbl(dt As DataTable, tablename As String) As Boolean
         updateStatus("Creating table: " & tablename)
 
         For Each col As DataColumn In dt.Columns
@@ -1255,6 +1249,8 @@ Public Class DataImporter
                     If maxlen < r(col).ToString().Length Then maxlen = r(col).ToString().Length
                 Next
                 If maxlen > -1 Then maxlen = maxlen * 1.5
+                If maxlen > 10 Then maxlen = 200
+                If maxlen > 200 Then maxlen = 10000
                 col.MaxLength = maxlen
             End If
         Next
@@ -1580,6 +1576,8 @@ Public Class DataImporter
 
     Private Function getURLContents(ByVal url As String) As String
         Dim options As RegexOptions = RegexOptions.IgnoreCase Or RegexOptions.Multiline Or RegexOptions.CultureInvariant Or RegexOptions.IgnorePatternWhitespace Or RegexOptions.Compiled
+        ServicePointManager.Expect100Continue = True
+        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
 
         Dim objwebclient As New System.Net.WebClient
         objwebclient.Headers.Add("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)")
@@ -1591,14 +1589,73 @@ Public Class DataImporter
         updateStatus("Getting contents of url: " & url)
 
         Try
-            ServicePointManager.Expect100Continue = True
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
-            Return objUTF8.GetString(objwebclient.DownloadData(url))
+            Dim fileData As Byte() = objwebclient.DownloadData(url)
+            If IsZip(fileData) Then
+                Return UnzipBytes(fileData)
+            End If
+            Return objUTF8.GetString(fileData)
         Catch ex As Exception
             logerror(ex, "Error getting data from: " & url)
             Return ""
         End Try
     End Function
+
+
+    Private Function UnzipBytes(fileData As Byte(), Optional filename As String = Nothing) As String
+        updateStatus("File seems to be in zip format. Extracting.")
+        Dim extractedFiles As New Dictionary(Of String, String)()
+        Dim largestSize As Long = 0
+        Dim largestFile = ""
+        Using stream As New MemoryStream(fileData)
+            Using archive As New ZipArchive(stream, ZipArchiveMode.Read)
+                For Each entry As ZipArchiveEntry In archive.Entries
+                    ' Ensure the file is a text file before reading it
+                    If entry.Length > 0 Then
+                        Using reader As New StreamReader(entry.Open())
+                            extractedFiles(entry.Name) = reader.ReadToEnd()
+                            If entry.Length > largestSize Then
+                                largestSize = entry.Length
+                                largestFile = entry.Name
+                            End If
+                        End Using
+                    End If
+                Next
+            End Using
+        End Using
+        updateStatus("Returning the contents of the largest file: " & largestFile)
+        If filename IsNot Nothing AndAlso extractedFiles.ContainsKey(filename) Then largestFile = filename
+        Return extractedFiles(largestFile)
+    End Function
+
+    ' Function to extract GZIP files (single file compression)
+    'Private Function ExtractFromGzip(fileData As Byte()) As Dictionary(Of String, String)
+    '    Dim extractedFiles As New Dictionary(Of String, String)()
+    '    Using compressedStream As New MemoryStream(fileData)
+    '        Using gzipStream As New GZipStream(compressedStream, CompressionMode.Decompress)
+    '            Using reader As New StreamReader(gzipStream)
+    '                extractedFiles("gzip_extracted.txt") = reader.ReadToEnd()
+    '            End Using
+    '        End Using
+    '    End Using
+    '    Return extractedFiles
+    'End Function
+
+    ' File signature checks
+    Private Function IsZip(fileData As Byte()) As Boolean
+        Return fileData.Length >= 4 AndAlso fileData(0) = &H50 AndAlso fileData(1) = &H4B AndAlso fileData(2) = &H3 AndAlso fileData(3) = &H4
+    End Function
+
+    Private Function IsGzip(fileData As Byte()) As Boolean
+        Return fileData.Length >= 2 AndAlso fileData(0) = &H1F AndAlso fileData(1) = &H8B
+    End Function
+
+    'Private Function IsRar(fileData As Byte()) As Boolean
+    '    Return fileData.Length >= 7 AndAlso fileData(0) = &H52 AndAlso fileData(1) = &H61 AndAlso fileData(2) = &H72 AndAlso fileData(3) = &H21
+    'End Function
+
+    'Private Function Is7z(fileData As Byte()) As Boolean
+    '    Return fileData.Length >= 6 AndAlso fileData(0) = &H37 AndAlso fileData(1) = &H7A AndAlso fileData(2) = &HBC AndAlso fileData(3) = &HAF
+    'End Function
 
 
 End Class

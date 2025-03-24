@@ -102,6 +102,8 @@ Partial Class FormBetter
         Me.TextBox1 = New System.Windows.Forms.TextBox()
         Me.Label19 = New System.Windows.Forms.Label()
         Me.TabPage3 = New System.Windows.Forms.TabPage()
+        Me.Label32 = New System.Windows.Forms.Label()
+        Me.Label31 = New System.Windows.Forms.Label()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.Label26 = New System.Windows.Forms.Label()
         Me.Button8 = New System.Windows.Forms.Button()
@@ -681,6 +683,9 @@ Partial Class FormBetter
         '
         'tbODBCTable
         '
+        Me.tbODBCTable.AcceptsReturn = True
+        Me.tbODBCTable.AcceptsTab = True
+        Me.tbODBCTable.AllowDrop = True
         Me.tbODBCTable.Location = New System.Drawing.Point(103, 51)
         Me.tbODBCTable.Multiline = True
         Me.tbODBCTable.Name = "tbODBCTable"
@@ -908,6 +913,8 @@ Partial Class FormBetter
         '
         'TabPage3
         '
+        Me.TabPage3.Controls.Add(Me.Label32)
+        Me.TabPage3.Controls.Add(Me.Label31)
         Me.TabPage3.Controls.Add(Me.GroupBox1)
         Me.TabPage3.Controls.Add(Me.tbperRowValues)
         Me.TabPage3.Controls.Add(Me.Label8)
@@ -931,6 +938,25 @@ Partial Class FormBetter
         Me.TabPage3.TabIndex = 2
         Me.TabPage3.Text = "Scripts"
         Me.TabPage3.UseVisualStyleBackColor = True
+        '
+        'Label32
+        '
+        Me.Label32.AutoSize = True
+        Me.Label32.Location = New System.Drawing.Point(13, 367)
+        Me.Label32.Name = "Label32"
+        Me.Label32.Size = New System.Drawing.Size(112, 39)
+        Me.Label32.TabIndex = 48
+        Me.Label32.Text = "Also run on the " & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "DESTINATION after" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "the import is complete."
+        '
+        'Label31
+        '
+        Me.Label31.AutoSize = True
+        Me.Label31.Location = New System.Drawing.Point(15, 197)
+        Me.Label31.Name = "Label31"
+        Me.Label31.Size = New System.Drawing.Size(122, 52)
+        Me.Label31.TabIndex = 47
+        Me.Label31.Text = "This script is run on the " & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "DESTINATION to limit " & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "the amount of checking " & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "for l" &
+    "arge data moves."
         '
         'GroupBox1
         '
@@ -1194,4 +1220,6 @@ Partial Class FormBetter
     Friend WithEvents tbtestODBC As Button
     Friend WithEvents lblDefaultodbc As TextBox
     Friend WithEvents Label30 As Label
+    Friend WithEvents Label32 As Label
+    Friend WithEvents Label31 As Label
 End Class

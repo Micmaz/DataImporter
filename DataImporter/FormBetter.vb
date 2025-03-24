@@ -184,6 +184,11 @@
     Private Sub btnBrowse_Click(sender As System.Object, e As System.EventArgs) Handles btnBrowse.Click
         If OpenFileDialog1.ShowDialog() = Windows.Forms.DialogResult.OK Then
             tbFileName.Text = OpenFileDialog1.FileName
+            Dim filename As String = tbFileName.Text.ToLower()
+            If filename.EndsWith("accdb") Then ddFileType.SelectedItem = "odbc"
+            If filename.EndsWith("csv") Then ddFileType.SelectedItem = "csv"
+            If filename.EndsWith("xlsx") Or filename.EndsWith("xls") Then ddFileType.SelectedItem = "excel"
+            If filename.EndsWith(".js") Then ddFileType.SelectedItem = "json"
         End If
     End Sub
 
