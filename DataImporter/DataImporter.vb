@@ -346,33 +346,46 @@ Public Class DataImporter
         Return UploadTableFilename()
     End Function
 
+    Public Function UploadTable(destinationTableName As String, inputTable As DataTable, Optional uniqueIdentifierColumns As String = Nothing, Optional columnNames As String = Nothing, Optional deleteExisting As Boolean = False, Optional createIfMissing As Boolean = True) As Boolean
+        Me.tableName = tableName
+        Me.fileName = fileName
+        Me.deleteExisting = deleteExisting
+        Me.uniqueIdentifierColumns = uniqueIdentifierColumns
+        Me.columnNames = columnNames
+        Me.createIfMissing = createIfMissing
+
+        Return UploadTableFilename(inputTable)
+    End Function
+
     Public Function Import() As Boolean
         Return UploadTableFilename()
     End Function
 
-    Public Function UploadTableFilename() As Boolean
+    Public Function UploadTableFilename(Optional inputTable As DataTable = Nothing) As Boolean
         If WaitingMessage1 IsNot Nothing Then
             WaitingMessage1.waitFunction(AddressOf UploadTableFilenameWorker, "Importing Data", parentfrm)
         Else
-            UploadTableFilenameWorker()
+            UploadTableFilenameWorker(inputTable)
             RaiseEvent ProcessingComplete(Me, New EventArgs)
         End If
         Return True
     End Function
 
-    Public Function UploadTableFilenameWorker() As Boolean
+    Public Function UploadTableFilenameWorker(Optional inputTable As DataTable = Nothing) As Boolean
         Try
-            updateStatus("Reading File: " & fileName)
+            If inputTable IsNot Nothing Then
+                fileFormat = Format.inputTable
+            Else
+                updateStatus("Reading File: " & fileName)
+            End If
+
             Dim lowername = fileName.ToLower()
             If fileFormat = Format.Auto Then
                 fileFormat = Format.csv
                 If lowername.EndsWith("json") Then fileFormat = Format.json
                 If Not String.IsNullOrWhiteSpace(regExCapture) Then fileFormat = Format.regex
-
-
             End If
 
-            Dim inputTable As DataTable = Nothing
             Try
                 If Not String.IsNullOrEmpty(odbcTableName) Then
                     fileFormat = Format.odbc
@@ -389,7 +402,6 @@ Public Class DataImporter
             Catch ex As Exception
                 logerror(ex)
             End Try
-
 
             If isFilenameURL Or File.Exists(fileName) Then _
             Return UploadTable(tableName, deleteExisting, uniqueIdentifierColumns, columnNames, createIfMissing, inputTable)
@@ -413,6 +425,7 @@ Public Class DataImporter
         excel = 3
         regex = 4
         odbc = 5
+        inputTable = 6
     End Enum
 
     Dim parser As Microsoft.VisualBasic.FileIO.TextFieldParser
@@ -548,7 +561,7 @@ Public Class DataImporter
             Dim remList As New List(Of String)
             For Each coname As String In editCols
                 If inputTable.Columns.Count <= colindex Then
-                    logerror(New Exception("There is no colum number: " + colindex.ToString() + " in the source file. Not importing column: " + coname))
+                    logerror(New Exception("There is no column number: " + colindex.ToString() + " in the source file. Not importing column: " + coname))
                     remList.Add(coname)
                 Else
                     If coname <> "" AndAlso Not inputTable.Columns.Contains(coname) Then inputTable.Columns(colindex).ColumnName = coname
@@ -1166,9 +1179,19 @@ Public Class DataImporter
         Return createTableFromCSVCols(outcontents, editCols, tablename)
     End Function
 
+    Private Function isEmpty(dt As DataTable, col As String) As Boolean
+
+        For Each r As DataRow In dt.Rows
+            If r(col).ToString().Length > 0 Then
+                Return False
+            End If
+        Next
+        Return True
+    End Function
+
     Public Function createTableFromCSVCols(fileContents As String, editCols As String(), tablename As String) As Boolean
         Dim dt As New DataTable
-        updateStatus("Creating table: " & tablename)
+        updateStatus("Creating table: " & tablename & " getting column types.")
         For Each col As String In editCols
             dt.Columns.Add(col)
         Next
@@ -1176,73 +1199,81 @@ Public Class DataImporter
 
         parseIntoTable(fileContents, editCols, dt)
         For Each col As DataColumn In dt.Columns
-            Dim t = GetType(Boolean)
-            Try
-                For Each r As DataRow In dt.Rows
-                    parseTypeVal(t, r(col), throwError:=True)
-                Next
-            Catch ex As Exception
-                t = GetType(Int32)
+            If isEmpty(dt, col.ColumnName) Then
+                typelist.Add(GetType(String))
+            Else
+                Dim t = GetType(Boolean)
                 Try
                     For Each r As DataRow In dt.Rows
                         parseTypeVal(t, r(col), throwError:=True)
                     Next
-                Catch ex1 As Exception
-                    t = GetType(Double)
+                Catch ex As Exception
+                    t = GetType(Int32)
                     Try
                         For Each r As DataRow In dt.Rows
                             parseTypeVal(t, r(col), throwError:=True)
                         Next
-                    Catch ex2 As Exception
+                    Catch ex1 As Exception
+                        t = GetType(Double)
                         Try
-                            t = GetType(DateTime)
                             For Each r As DataRow In dt.Rows
                                 parseTypeVal(t, r(col), throwError:=True)
                             Next
+                        Catch ex2 As Exception
+                            Try
+                                t = GetType(DateTime)
+                                For Each r As DataRow In dt.Rows
+                                    parseTypeVal(t, r(col), throwError:=True)
+                                Next
 
-                        Catch ex3 As Exception
-                            t = GetType(String)
+                            Catch ex3 As Exception
+                                t = GetType(String)
+                            End Try
                         End Try
-                    End Try
 
+                    End Try
                 End Try
-            End Try
-            typelist.Add(t)
+                typelist.Add(t)
+            End If
         Next
 
         dt = New DataTable(tablename)
 
-        Dim i As Integer = 0
-        For Each col As String In editCols
-            dt.Columns.Add(col, typelist(i))
-            i += 1
-        Next
-        parseIntoTable(fileContents, editCols, dt, False)
-
-        createTableFromInputTbl(dt, tablename)
-
-    End Function
-
-    Private Sub CreateIDCol(dt As DataTable)
-        If dt.Columns("id") Is Nothing Then
-            Dim col As DataColumn = dt.Columns.Add("ID", GetType(Int32))
-            col.AutoIncrement = True
-            col.AutoIncrementSeed = -1
-            col.AutoIncrementStep = -1
-            For Each r In dt.Rows
-                r("ID") = dt.Rows.IndexOf(r)
+            Dim i As Integer = 0
+            For Each col As String In editCols
+                dt.Columns.Add(col, typelist(i))
+                i += 1
             Next
-            col.SetOrdinal(0)
-            col.ReadOnly = True
-            col.AllowDBNull = False
-            dt.PrimaryKey = New DataColumn() {col}
-        End If
-    End Sub
+            parseIntoTable(fileContents, editCols, dt, False)
 
-    Public Function createTableFromInputTbl(dt As DataTable, tablename As String) As Boolean
-        updateStatus("Creating table: " & tablename)
+            createTableFromInputTbl(dt, tablename)
+
+        End Function
+
+        Private Sub CreateIDCol(dt As DataTable)
+            If dt.Columns("id") Is Nothing Then
+                Dim col As DataColumn = dt.Columns.Add("ID", GetType(Int32))
+                col.AutoIncrement = True
+                col.AutoIncrementSeed = -1
+                col.AutoIncrementStep = -1
+                For Each r In dt.Rows
+                    r("ID") = dt.Rows.IndexOf(r)
+                Next
+                col.SetOrdinal(0)
+                col.ReadOnly = True
+                col.AllowDBNull = False
+                dt.PrimaryKey = New DataColumn() {col}
+            End If
+        End Sub
+
+        Public Function createTableFromInputTbl(dt As DataTable, tablename As String) As Boolean
+            updateStatus("Creating table: " & tablename)
 
         For Each col As DataColumn In dt.Columns
+            If isEmpty(dt, col.ColumnName) Then
+                col.DataType = GetType(String)
+                col.MaxLength = 200
+            End If
             If col.DataType Is GetType(String) Then
                 Dim maxlen As Integer = -1
                 For Each r As DataRow In dt.Rows
@@ -1255,408 +1286,407 @@ Public Class DataImporter
             End If
         Next
         CreateIDCol(dt)
-        Return sqlhelper.checkAndCreateTable(dt)
-    End Function
+            Return sqlhelper.checkAndCreateTable(dt)
+        End Function
 #End Region
 
 
 
-    'Public Property geoCodeServiceURL As String = "http://nominatim.openstreetmap.org/search?format=jsonv2&polygon=0&addressdetails=0&q="
-    'Public Property latRegex As String = "lat\""\s*\:\s*\""(?<lat>.*?)\"""
-    'Public Property lonRegex As String = "lon\""\s*\:\s*\""(?<lon>.*?)\"""
+        'Public Property geoCodeServiceURL As String = "http://nominatim.openstreetmap.org/search?format=jsonv2&polygon=0&addressdetails=0&q="
+        'Public Property latRegex As String = "lat\""\s*\:\s*\""(?<lat>.*?)\"""
+        'Public Property lonRegex As String = "lon\""\s*\:\s*\""(?<lon>.*?)\"""
 
-    Public Property geoCodeServiceURL As String = "https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyBVi40EbEoia9CEJXuZyyMIQLngT6k14_k&sensor=true_or_false&address="
-    'Public Property geoCodeServiceURL As String = "http://www.datasciencetoolkit.org/maps/api/geocode/json?sensor=false&address="
-    'Public Property geoCodeServiceURL As String = "http://nominatim.openstreetmap.org/search?format=jsonv2&polygon=0&addressdetails=0&q="
-    Public Property latRegex As String = "lat\""\s*\:\s*(?<lat>.*)"
-    Public Property lonRegex As String = "lng\""\s*\:\s*(?<lon>.*)"
+        Public Property geoCodeServiceURL As String = "https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyBVi40EbEoia9CEJXuZyyMIQLngT6k14_k&sensor=true_or_false&address="
+        'Public Property geoCodeServiceURL As String = "http://www.datasciencetoolkit.org/maps/api/geocode/json?sensor=false&address="
+        'Public Property geoCodeServiceURL As String = "http://nominatim.openstreetmap.org/search?format=jsonv2&polygon=0&addressdetails=0&q="
+        Public Property latRegex As String = "lat\""\s*\:\s*(?<lat>.*)"
+        Public Property lonRegex As String = "lng\""\s*\:\s*(?<lon>.*)"
 
-    Public Function getLatLon(address As String) As Double()
-        Try
-            Dim r As HttpWebRequest = CType(HttpWebRequest.Create((geoCodeServiceURL & address)), HttpWebRequest)
+        Public Function getLatLon(address As String) As Double()
+            Try
+                Dim r As HttpWebRequest = CType(HttpWebRequest.Create((geoCodeServiceURL & address)), HttpWebRequest)
 
-            r.Method = "GET"
-            Dim res As WebResponse = r.GetResponse
-            Dim InputText As String = New StreamReader(res.GetResponseStream()).ReadToEnd()
-            Dim lat As Double = New Regex(latRegex).Matches(InputText)(0).Groups("lat").ToString().Replace(",", "").Trim()
-            Dim lon As Double = New Regex(lonRegex).Matches(InputText)(0).Groups("lon").ToString().Replace(",", "").Trim()
-            Return New Double() {lat, lon}
-        Catch ex As Exception
+                r.Method = "GET"
+                Dim res As WebResponse = r.GetResponse
+                Dim InputText As String = New StreamReader(res.GetResponseStream()).ReadToEnd()
+                Dim lat As Double = New Regex(latRegex).Matches(InputText)(0).Groups("lat").ToString().Replace(",", "").Trim()
+                Dim lon As Double = New Regex(lonRegex).Matches(InputText)(0).Groups("lon").ToString().Replace(",", "").Trim()
+                Return New Double() {lat, lon}
+            Catch ex As Exception
 
-        End Try
-        Return Nothing
+            End Try
+            Return Nothing
 
-    End Function
+        End Function
 
-    Private Sub InitializeComponent()
-        Me.WaitingMessage1 = New WaitingDialog.WaitingMessage()
-        '
-        'WaitingMessage1
-        '
-        Me.WaitingMessage1.dialogueType = WaitingDialog.WaitDialogueType.WaitingDlg
-        Me.WaitingMessage1.DisplayedText = "text"
-        Me.WaitingMessage1.icon = Nothing
-        Me.WaitingMessage1.Progress = 0
-        Me.WaitingMessage1.TerminateThreadOnCancel = True
-        Me.WaitingMessage1.topText = "Please wait...."
+        Private Sub InitializeComponent()
+            Me.WaitingMessage1 = New WaitingDialog.WaitingMessage()
+            '
+            'WaitingMessage1
+            '
+            Me.WaitingMessage1.dialogueType = WaitingDialog.WaitDialogueType.WaitingDlg
+            Me.WaitingMessage1.DisplayedText = "text"
+            Me.WaitingMessage1.icon = Nothing
+            Me.WaitingMessage1.Progress = 0
+            Me.WaitingMessage1.TerminateThreadOnCancel = True
+            Me.WaitingMessage1.topText = "Please wait...."
 
-    End Sub
+        End Sub
 
-    Private Sub WaitingMessage1_ProcessCanceled(sender As Object, e As System.EventArgs) Handles WaitingMessage1.ProcessCanceled
-        setStatusSummary()
-        RaiseEvent ProcessingComplete(Me, e)
-    End Sub
+        Private Sub WaitingMessage1_ProcessCanceled(sender As Object, e As System.EventArgs) Handles WaitingMessage1.ProcessCanceled
+            setStatusSummary()
+            RaiseEvent ProcessingComplete(Me, e)
+        End Sub
 
-    Private Sub WaitingMessage1_ProcessFinishedSucessfully(sender As Object, e As System.EventArgs) Handles WaitingMessage1.ProcessFinishedSucessfully
-        RaiseEvent ProcessingComplete(Me, e)
-    End Sub
+        Private Sub WaitingMessage1_ProcessFinishedSucessfully(sender As Object, e As System.EventArgs) Handles WaitingMessage1.ProcessFinishedSucessfully
+            RaiseEvent ProcessingComplete(Me, e)
+        End Sub
 
 #Region "Read configs"
 
 
-    Public Sub ParseJsonField(ByRef row As DataRow, fieldname As String)
-        Dim dt As DataTable = row.Table
-        If dt.Columns.Contains(fieldname) Then
-            Dim r As Regex = New Regex("\""(?<name>.*?)\""\s*\:\s*\""(?<val>.*?)\""",
+        Public Sub ParseJsonField(ByRef row As DataRow, fieldname As String)
+            Dim dt As DataTable = row.Table
+            If dt.Columns.Contains(fieldname) Then
+                Dim r As Regex = New Regex("\""(?<name>.*?)\""\s*\:\s*\""(?<val>.*?)\""",
                 RegexOptions.IgnoreCase _
                 Or RegexOptions.Multiline _
                 Or RegexOptions.CultureInvariant _
                 Or RegexOptions.Compiled
                 )
-            For Each m As Match In r.Matches(row(fieldname).ToString())
-                Dim colname As String = Regex.Replace(m.Groups("name").ToString(), "[^A-Za-z0-9]+", "")
-                If dt.Columns.Contains(colname) Then
-                    setRowValue(row, colname, m.Groups("val").ToString())
-                End If
-
-            Next
-        End If
-    End Sub
-
-    Public Function readConfigs(filename As String, Optional argv As String() = Nothing) As argResults
-        If argv Is Nothing Then argv = New String() {}
-        argv = parseConfigs(filename, argv)
-        Return setfromArgs(argv)
-    End Function
-
-    Public Shared Function parseConfigs(filename As String, Optional argv As String() = Nothing) As String()
-        If argv Is Nothing Then argv = New String() {}
-        Dim contents As String = System.IO.File.ReadAllText(filename)
-        contents = contents.Replace(vbCrLf, " ").Replace(vbCr, " ").Replace(vbLf, " ").Replace("  ", " ")
-        Dim parser As New Microsoft.VisualBasic.FileIO.TextFieldParser(New IO.StringReader(contents))
-        parser.HasFieldsEnclosedInQuotes = True
-        parser.SetDelimiters(" ")
-        Dim newArgs() As String = parser.ReadFields()
-        Dim startLen As Integer = newArgs.Length
-        If argv.Length > 1 Then
-            ReDim Preserve newArgs(newArgs.Length + argv.Length - 1)
-            argv.CopyTo(newArgs, startLen)
-        End If
-
-        Return newArgs
-
-    End Function
-
-    Public Function setfromArgs(argv As String()) As argResults
-        Dim retval As argResults = argResults.normal
-        For i As Integer = 0 To argv.Length - 1
-            Dim arg As String = argv(i).ToLower()
-            If arg.StartsWith("/") Then
-                arg = arg.Trim("/")
-                If arg = "?" Then
-                    writeHelp()
-                    retval = argResults.writeHelp
-                ElseIf arg = "c" Then
-                    Me.connectionString = argv(i + 1)
-                ElseIf arg = "ct" Then
-                    Me.connectionType = argv(i + 1)
-                ElseIf arg = "f" Then
-                    Me.fileName = argv(i + 1)
-                ElseIf arg = "t" Then
-                    Me.tableName = argv(i + 1)
-                ElseIf arg = "p" Then
-                    Me.uniqueIdentifierColumns = argv(i + 1)
-                ElseIf arg = "sv" Then
-                    Me.processValuesScriptFile = argv(i + 1)
-                ElseIf arg = "s" Then
-                    Me.processRowScriptFile = argv(i + 1)
-                ElseIf arg = "st" Then
-                    Me.processTableScript = argv(i + 1)
-                ElseIf arg = "si" Then
-                    Me.processInputScriptFile = argv(i + 1)
-                ElseIf arg = "d" Then
-                    Me.deleteExisting = True
-                    If argv.Length > i AndAlso argv(i + 1) = "0" Then Me.deleteExisting = False
-                ElseIf arg = "b" Then
-                    Me.batchsize = argv(i + 1)
-                ElseIf arg = "n" Then
-                    Me.createIfMissing = True
-                    If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.createIfMissing = False
-                ElseIf arg = "q" Then
-                    Me.hideProgress = True
-                    If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.hideProgress = False
-                ElseIf arg = "dt" Then
-                    Me.setCreatedDate = True
-                    If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.setCreatedDate = False
-                ElseIf arg = "nullblank" Then
-                    Me.blankIsNull = True
-                    If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.setCreatedDate = False
-                ElseIf arg = "cols" Then
-                    Me.columnNames = argv(i + 1)
-                ElseIf arg = "lim" Then
-                    Me.limitingQuery = argv(i + 1)
-                ElseIf arg = "compsql" Then
-                    Me.completedSQL = argv(i + 1)
-                ElseIf arg = "w" Then
-                    retval = argResults.asForm
-                ElseIf arg = "delim" Then
-                    Dim delimChar As String = argv(i + 1)
-                    If delimChar.ToLower = "tab" Then delimChar = vbTab
-                    Me.delimiter = delimChar
-                ElseIf arg = "regex" Then
-                    Me.regExCapture = argv(i + 1)
-                ElseIf arg = "skip" Then
-                    Me.skipRows = argv(i + 1)
-                ElseIf arg = "stack" Then
-                    Me.showstackTrace = True
-                    If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.showstackTrace = False
-                ElseIf arg = "dateform" Then
-                    Me.dateFormatList = argv(i + 1)
-                ElseIf arg = "excelworksheet" Then
-                    Me.excelWorksheetNumber = argv(i + 1)
-                ElseIf arg = "odbctable" Then
-                    Me.odbcTableName = argv(i + 1)
-                ElseIf arg = "odbcconn" Then
-                    Me.odbcConnectionString = argv(i + 1)
-                ElseIf arg = "format" Then
-                    If argv.Length > i + 1 Then
-                        Dim format As String = argv(i + 1).ToLower()
-                        If format = "auto" Then Me.fileFormat = DataImporter.Format.Auto
-                        If format = "json" Then Me.fileFormat = DataImporter.Format.json
-                        If format = "csv" Then Me.fileFormat = DataImporter.Format.csv
-                        If format = "excel" Then Me.fileFormat = DataImporter.Format.excel
-                        If format = "odbc" Then Me.fileFormat = DataImporter.Format.odbc
-                        If format = "regex" Then Me.fileFormat = DataImporter.Format.regex
+                For Each m As Match In r.Matches(row(fieldname).ToString())
+                    Dim colname As String = Regex.Replace(m.Groups("name").ToString(), "[^A-Za-z0-9]+", "")
+                    If dt.Columns.Contains(colname) Then
+                        setRowValue(row, colname, m.Groups("val").ToString())
                     End If
 
-                End If
+                Next
             End If
-        Next
-        Return retval
-    End Function
+        End Sub
 
-    Public Enum argResults
-        normal
-        asForm
-        writeHelp
-    End Enum
+        Public Function readConfigs(filename As String, Optional argv As String() = Nothing) As argResults
+            If argv Is Nothing Then argv = New String() {}
+            argv = parseConfigs(filename, argv)
+            Return setfromArgs(argv)
+        End Function
+
+        Public Shared Function parseConfigs(filename As String, Optional argv As String() = Nothing) As String()
+            If argv Is Nothing Then argv = New String() {}
+            Dim contents As String = System.IO.File.ReadAllText(filename)
+            contents = contents.Replace(vbCrLf, " ").Replace(vbCr, " ").Replace(vbLf, " ").Replace("  ", " ")
+            Dim parser As New Microsoft.VisualBasic.FileIO.TextFieldParser(New IO.StringReader(contents))
+            parser.HasFieldsEnclosedInQuotes = True
+            parser.SetDelimiters(" ")
+            Dim newArgs() As String = parser.ReadFields()
+            Dim startLen As Integer = newArgs.Length
+            If argv.Length > 1 Then
+                ReDim Preserve newArgs(newArgs.Length + argv.Length - 1)
+                argv.CopyTo(newArgs, startLen)
+            End If
+
+            Return newArgs
+
+        End Function
+
+        Public Function setfromArgs(argv As String()) As argResults
+            Dim retval As argResults = argResults.normal
+            For i As Integer = 0 To argv.Length - 1
+                Dim arg As String = argv(i).ToLower()
+                If arg.StartsWith("/") Then
+                    arg = arg.Trim("/")
+                    If arg = "?" Then
+                        writeHelp()
+                        retval = argResults.writeHelp
+                    ElseIf arg = "c" Then
+                        Me.connectionString = argv(i + 1)
+                    ElseIf arg = "ct" Then
+                        Me.connectionType = argv(i + 1)
+                    ElseIf arg = "f" Then
+                        Me.fileName = argv(i + 1)
+                    ElseIf arg = "t" Then
+                        Me.tableName = argv(i + 1)
+                    ElseIf arg = "p" Then
+                        Me.uniqueIdentifierColumns = argv(i + 1)
+                    ElseIf arg = "sv" Then
+                        Me.processValuesScriptFile = argv(i + 1)
+                    ElseIf arg = "s" Then
+                        Me.processRowScriptFile = argv(i + 1)
+                    ElseIf arg = "st" Then
+                        Me.processTableScript = argv(i + 1)
+                    ElseIf arg = "si" Then
+                        Me.processInputScriptFile = argv(i + 1)
+                    ElseIf arg = "d" Then
+                        Me.deleteExisting = True
+                        If argv.Length > i AndAlso argv(i + 1) = "0" Then Me.deleteExisting = False
+                    ElseIf arg = "b" Then
+                        Me.batchsize = argv(i + 1)
+                    ElseIf arg = "n" Then
+                        Me.createIfMissing = True
+                        If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.createIfMissing = False
+                    ElseIf arg = "q" Then
+                        Me.hideProgress = True
+                        If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.hideProgress = False
+                    ElseIf arg = "dt" Then
+                        Me.setCreatedDate = True
+                        If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.setCreatedDate = False
+                    ElseIf arg = "nullblank" Then
+                        Me.blankIsNull = True
+                        If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.setCreatedDate = False
+                    ElseIf arg = "cols" Then
+                        Me.columnNames = argv(i + 1)
+                    ElseIf arg = "lim" Then
+                        Me.limitingQuery = argv(i + 1)
+                    ElseIf arg = "compsql" Then
+                        Me.completedSQL = argv(i + 1)
+                    ElseIf arg = "w" Then
+                        retval = argResults.asForm
+                    ElseIf arg = "delim" Then
+                        Dim delimChar As String = argv(i + 1)
+                        If delimChar.ToLower = "tab" Then delimChar = vbTab
+                        Me.delimiter = delimChar
+                    ElseIf arg = "regex" Then
+                        Me.regExCapture = argv(i + 1)
+                    ElseIf arg = "skip" Then
+                        Me.skipRows = argv(i + 1)
+                    ElseIf arg = "stack" Then
+                        Me.showstackTrace = True
+                        If argv.Length > i + 1 AndAlso argv(i + 1) = "0" Then Me.showstackTrace = False
+                    ElseIf arg = "dateform" Then
+                        Me.dateFormatList = argv(i + 1)
+                    ElseIf arg = "excelworksheet" Then
+                        Me.excelWorksheetNumber = argv(i + 1)
+                    ElseIf arg = "odbctable" Then
+                        Me.odbcTableName = argv(i + 1)
+                    ElseIf arg = "odbcconn" Then
+                        Me.odbcConnectionString = argv(i + 1)
+                    ElseIf arg = "format" Then
+                        If argv.Length > i + 1 Then
+                            Dim format As String = argv(i + 1).ToLower()
+                            If format = "auto" Then Me.fileFormat = DataImporter.Format.Auto
+                            If format = "json" Then Me.fileFormat = DataImporter.Format.json
+                            If format = "csv" Then Me.fileFormat = DataImporter.Format.csv
+                            If format = "excel" Then Me.fileFormat = DataImporter.Format.excel
+                            If format = "odbc" Then Me.fileFormat = DataImporter.Format.odbc
+                            If format = "regex" Then Me.fileFormat = DataImporter.Format.regex
+                        End If
+
+                    End If
+                End If
+            Next
+            Return retval
+        End Function
+
+        Public Enum argResults
+            normal
+            asForm
+            writeHelp
+        End Enum
 
 #End Region
 
 #Region "Excel handelers"
 
 
-    Public Shared Function ConvertExcelToTable(excelFilePath As String, Optional worksheetNumber As Integer = -1) As DataTable
-        If Not File.Exists(excelFilePath) Then
-            Throw New FileNotFoundException(excelFilePath)
-        End If
-
-        Dim retDT As DataTable
-        Using stream = File.Open(excelFilePath, FileMode.Open, FileAccess.Read)
-            Using reader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream)
-                Dim result = ExcelDataReader.ExcelDataReaderExtensions.AsDataSet(reader)
-                If (worksheetNumber = -1) Then
-                    worksheetNumber = 0
-                Else
-
-                End If
-                If result.Tables.Count > worksheetNumber Then
-                    retDT = result.Tables(worksheetNumber)
-                End If
-            End Using
-        End Using
-
-        Return retDT
-
-        '      ' connection string
-        '      Dim cnnStr = String.Format(defaultXLSConnection, excelFilePath)
-        '      If excelFilePath.ToLower().EndsWith("xlsx") Then
-        '          cnnStr = String.Format(defaultXLSConnection, excelFilePath)
-        '      End If
-        ''Dim cnnStr = [String].Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", excelFilePath)
-        'Dim cnn = New OleDbConnection(cnnStr)
-
-        '' get schema, then data
-        'Dim dt = New DataTable()
-        'Try
-        '	cnn.Open()
-        '	Dim schemaTable = cnn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, Nothing)
-        '	If schemaTable.Rows.Count <= worksheetNumber Then
-        '		Throw New ArgumentException("The worksheet number provided cannot be found in the spreadsheet")
-        '	End If
-        '	If worksheetNumber < 0 Then
-        '		For i = 0 To schemaTable.Rows.Count
-        '			Dim worksheet As String = schemaTable.Rows(worksheetNumber)("table_name").ToString().Replace("'", "")
-        '			Dim sql As String = [String].Format("select * from [{0}]", worksheet)
-        '			Dim da = New OleDbDataAdapter(sql, cnn)
-        '			da.Fill(dt)
-        '		Next
-        '	Else
-        '		Dim worksheet As String = schemaTable.Rows(worksheetNumber)("table_name").ToString().Replace("'", "")
-        '		Dim sql As String = [String].Format("select * from [{0}]", worksheet)
-        '		Dim da = New OleDbDataAdapter(sql, cnn)
-        '		da.Fill(dt)
-        '	End If
-        'Catch e As Exception
-        '	' ???
-        '	Throw e
-        'Finally
-        '	' free resources
-        '	cnn.Close()
-        'End Try
-        'Return dt
-    End Function
-
-    Public Shared Function ConvertODBCToTable(FilePath As String, TableName As String, Optional ConnectionString As String = Nothing) As DataTable
-        If String.IsNullOrWhiteSpace(ConnectionString) Then ConnectionString = defaultODBCConnection
-        If Not File.Exists(FilePath) Then
-            Throw New FileNotFoundException(FilePath)
-        End If
-        Dim cnnStr = String.Format(ConnectionString, FilePath)
-        Dim cnn = New OleDbConnection(cnnStr)
-
-        ' get schema, then data
-        Dim dt = New DataTable()
-        Try
-            cnn.Open()
-            Dim schemaTable = cnn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, Nothing)
-
-            Dim sql As String = [String].Format("select * from [{0}]", TableName)
-            If TableName.ToLower.Contains("select ") Then
-                sql = TableName   'TableName can now be a full select or join
+        Public Shared Function ConvertExcelToTable(excelFilePath As String, Optional worksheetNumber As Integer = -1) As DataTable
+            If Not File.Exists(excelFilePath) Then
+                Throw New FileNotFoundException(excelFilePath)
             End If
-            Dim da = New OleDbDataAdapter(sql, cnn)
-            da.Fill(dt)
 
-        Catch e As Exception
-            ' ???
-            Throw e
-        Finally
-            ' free resources
-            cnn.Close()
-        End Try
-        Return dt
-    End Function
+            Dim retDT As DataTable
+            Using stream = File.Open(excelFilePath, FileMode.Open, FileAccess.Read)
+                Using reader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream)
+                    Dim result = ExcelDataReader.ExcelDataReaderExtensions.AsDataSet(reader)
+                    If (worksheetNumber = -1) Then
+                        worksheetNumber = 0
+                    Else
+
+                    End If
+                    If result.Tables.Count > worksheetNumber Then
+                        retDT = result.Tables(worksheetNumber)
+                    End If
+                End Using
+            End Using
+
+            Return retDT
+
+            '      ' connection string
+            '      Dim cnnStr = String.Format(defaultXLSConnection, excelFilePath)
+            '      If excelFilePath.ToLower().EndsWith("xlsx") Then
+            '          cnnStr = String.Format(defaultXLSConnection, excelFilePath)
+            '      End If
+            ''Dim cnnStr = [String].Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", excelFilePath)
+            'Dim cnn = New OleDbConnection(cnnStr)
+
+            '' get schema, then data
+            'Dim dt = New DataTable()
+            'Try
+            '	cnn.Open()
+            '	Dim schemaTable = cnn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, Nothing)
+            '	If schemaTable.Rows.Count <= worksheetNumber Then
+            '		Throw New ArgumentException("The worksheet number provided cannot be found in the spreadsheet")
+            '	End If
+            '	If worksheetNumber < 0 Then
+            '		For i = 0 To schemaTable.Rows.Count
+            '			Dim worksheet As String = schemaTable.Rows(worksheetNumber)("table_name").ToString().Replace("'", "")
+            '			Dim sql As String = [String].Format("select * from [{0}]", worksheet)
+            '			Dim da = New OleDbDataAdapter(sql, cnn)
+            '			da.Fill(dt)
+            '		Next
+            '	Else
+            '		Dim worksheet As String = schemaTable.Rows(worksheetNumber)("table_name").ToString().Replace("'", "")
+            '		Dim sql As String = [String].Format("select * from [{0}]", worksheet)
+            '		Dim da = New OleDbDataAdapter(sql, cnn)
+            '		da.Fill(dt)
+            '	End If
+            'Catch e As Exception
+            '	' ???
+            '	Throw e
+            'Finally
+            '	' free resources
+            '	cnn.Close()
+            'End Try
+            'Return dt
+        End Function
+
+        Public Shared Function ConvertODBCToTable(FilePath As String, TableName As String, Optional ConnectionString As String = Nothing) As DataTable
+            If String.IsNullOrWhiteSpace(ConnectionString) Then ConnectionString = defaultODBCConnection
+            If Not File.Exists(FilePath) Then
+                Throw New FileNotFoundException(FilePath)
+            End If
+            Dim cnnStr = String.Format(ConnectionString, FilePath)
+            Dim cnn = New OleDbConnection(cnnStr)
+
+            ' get schema, then data
+            Dim dt = New DataTable()
+            Try
+                cnn.Open()
+                Dim schemaTable = cnn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, Nothing)
+
+                Dim sql As String = [String].Format("select * from [{0}]", TableName)
+                If TableName.ToLower.Contains("select ") Then
+                    sql = TableName   'TableName can now be a full select or join
+                End If
+                Dim da = New OleDbDataAdapter(sql, cnn)
+                da.Fill(dt)
+
+            Catch e As Exception
+                ' ???
+                Throw e
+            Finally
+                ' free resources
+                cnn.Close()
+            End Try
+            Return dt
+        End Function
 
 
 #End Region
 
-    Public Function testOdbc(filename As String, Optional connectionString As String = Nothing) As String
+        Public Function testOdbc(filename As String, Optional connectionString As String = Nothing) As String
 
-        If String.IsNullOrWhiteSpace(connectionString) Then
-            connectionString = defaultODBCConnection
-            If filename.ToLower().EndsWith("xls") Then connectionString = defaultXLSConnection
-            If filename.ToLower().EndsWith("xlsx") Then connectionString = defaultXLSXConnection
-        End If
-        Dim cnnStr = String.Format(connectionString, filename)
-        'Dim cnnStr = [String].Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", excelFilePath)
-        Dim cnn = New OleDbConnection(cnnStr)
-        ' get schema, then data
-        Try
-            cnn.Open()
-        Catch e As Exception
-            Return e.Message
-        Finally
-            cnn.Close()
-
-        End Try
-        Return "Success"
-
-    End Function
-
-    Private Function getURLContents(ByVal url As String) As String
-        Dim options As RegexOptions = RegexOptions.IgnoreCase Or RegexOptions.Multiline Or RegexOptions.CultureInvariant Or RegexOptions.IgnorePatternWhitespace Or RegexOptions.Compiled
-        ServicePointManager.Expect100Continue = True
-        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
-
-        Dim objwebclient As New System.Net.WebClient
-        objwebclient.Headers.Add("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)")
-        Dim objUTF8 As New System.Text.UTF8Encoding
-        Dim starttime As DateTime = Now
-        If Not url.Contains("http://") AndAlso Not url.Contains("https://") Then
-            url = "http://" & url
-        End If
-        updateStatus("Getting contents of url: " & url)
-
-        Try
-            Dim fileData As Byte() = objwebclient.DownloadData(url)
-            If IsZip(fileData) Then
-                Return UnzipBytes(fileData)
+            If String.IsNullOrWhiteSpace(connectionString) Then
+                connectionString = defaultODBCConnection
+                If filename.ToLower().EndsWith("xls") Then connectionString = defaultXLSConnection
+                If filename.ToLower().EndsWith("xlsx") Then connectionString = defaultXLSXConnection
             End If
-            Return objUTF8.GetString(fileData)
-        Catch ex As Exception
-            logerror(ex, "Error getting data from: " & url)
-            Return ""
-        End Try
-    End Function
+            Dim cnnStr = String.Format(connectionString, filename)
+            'Dim cnnStr = [String].Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", excelFilePath)
+            Dim cnn = New OleDbConnection(cnnStr)
+            ' get schema, then data
+            Try
+                cnn.Open()
+            Catch e As Exception
+                Return e.Message
+            Finally
+                cnn.Close()
 
+            End Try
+            Return "Success"
+
+        End Function
+
+        Private Function getURLContents(ByVal url As String) As String
+            Dim options As RegexOptions = RegexOptions.IgnoreCase Or RegexOptions.Multiline Or RegexOptions.CultureInvariant Or RegexOptions.IgnorePatternWhitespace Or RegexOptions.Compiled
+            ServicePointManager.Expect100Continue = True
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
+
+            Dim objwebclient As New System.Net.WebClient
+            objwebclient.Headers.Add("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)")
+            Dim objUTF8 As New System.Text.UTF8Encoding
+            Dim starttime As DateTime = Now
+            If Not url.Contains("http://") AndAlso Not url.Contains("https://") Then
+                url = "http://" & url
+            End If
+            updateStatus("Getting contents of url: " & url)
+
+            Try
+                Dim fileData As Byte() = objwebclient.DownloadData(url)
+                If IsZip(fileData) Then
+                    Return UnzipBytes(fileData)
+                End If
+                Return objUTF8.GetString(fileData)
+            Catch ex As Exception
+                logerror(ex, "Error getting data from: " & url)
+                Return ""
+            End Try
+        End Function
 
     Private Function UnzipBytes(fileData As Byte(), Optional filename As String = Nothing) As String
-        updateStatus("File seems to be in zip format. Extracting.")
-        Dim extractedFiles As New Dictionary(Of String, String)()
-        Dim largestSize As Long = 0
-        Dim largestFile = ""
-        Using stream As New MemoryStream(fileData)
-            Using archive As New ZipArchive(stream, ZipArchiveMode.Read)
-                For Each entry As ZipArchiveEntry In archive.Entries
-                    ' Ensure the file is a text file before reading it
-                    If entry.Length > 0 Then
-                        Using reader As New StreamReader(entry.Open())
-                            extractedFiles(entry.Name) = reader.ReadToEnd()
-                            If entry.Length > largestSize Then
-                                largestSize = entry.Length
-                                largestFile = entry.Name
-                            End If
-                        End Using
-                    End If
-                Next
+            updateStatus("File seems to be in zip format. Extracting.")
+            Dim extractedFiles As New Dictionary(Of String, String)()
+            Dim largestSize As Long = 0
+            Dim largestFile = ""
+            Using stream As New MemoryStream(fileData)
+                Using archive As New ZipArchive(stream, ZipArchiveMode.Read)
+                    For Each entry As ZipArchiveEntry In archive.Entries
+                        ' Ensure the file is a text file before reading it
+                        If entry.Length > 0 Then
+                            Using reader As New StreamReader(entry.Open())
+                                extractedFiles(entry.Name) = reader.ReadToEnd()
+                                If entry.Length > largestSize Then
+                                    largestSize = entry.Length
+                                    largestFile = entry.Name
+                                End If
+                            End Using
+                        End If
+                    Next
+                End Using
             End Using
-        End Using
-        updateStatus("Returning the contents of the largest file: " & largestFile)
-        If filename IsNot Nothing AndAlso extractedFiles.ContainsKey(filename) Then largestFile = filename
-        Return extractedFiles(largestFile)
-    End Function
+            updateStatus("Returning the contents of the largest file: " & largestFile)
+            If filename IsNot Nothing AndAlso extractedFiles.ContainsKey(filename) Then largestFile = filename
+            Return extractedFiles(largestFile)
+        End Function
 
-    ' Function to extract GZIP files (single file compression)
-    'Private Function ExtractFromGzip(fileData As Byte()) As Dictionary(Of String, String)
-    '    Dim extractedFiles As New Dictionary(Of String, String)()
-    '    Using compressedStream As New MemoryStream(fileData)
-    '        Using gzipStream As New GZipStream(compressedStream, CompressionMode.Decompress)
-    '            Using reader As New StreamReader(gzipStream)
-    '                extractedFiles("gzip_extracted.txt") = reader.ReadToEnd()
-    '            End Using
-    '        End Using
-    '    End Using
-    '    Return extractedFiles
-    'End Function
+        ' Function to extract GZIP files (single file compression)
+        'Private Function ExtractFromGzip(fileData As Byte()) As Dictionary(Of String, String)
+        '    Dim extractedFiles As New Dictionary(Of String, String)()
+        '    Using compressedStream As New MemoryStream(fileData)
+        '        Using gzipStream As New GZipStream(compressedStream, CompressionMode.Decompress)
+        '            Using reader As New StreamReader(gzipStream)
+        '                extractedFiles("gzip_extracted.txt") = reader.ReadToEnd()
+        '            End Using
+        '        End Using
+        '    End Using
+        '    Return extractedFiles
+        'End Function
 
-    ' File signature checks
-    Private Function IsZip(fileData As Byte()) As Boolean
-        Return fileData.Length >= 4 AndAlso fileData(0) = &H50 AndAlso fileData(1) = &H4B AndAlso fileData(2) = &H3 AndAlso fileData(3) = &H4
-    End Function
+        ' File signature checks
+        Private Function IsZip(fileData As Byte()) As Boolean
+            Return fileData.Length >= 4 AndAlso fileData(0) = &H50 AndAlso fileData(1) = &H4B AndAlso fileData(2) = &H3 AndAlso fileData(3) = &H4
+        End Function
 
-    Private Function IsGzip(fileData As Byte()) As Boolean
-        Return fileData.Length >= 2 AndAlso fileData(0) = &H1F AndAlso fileData(1) = &H8B
-    End Function
+        Private Function IsGzip(fileData As Byte()) As Boolean
+            Return fileData.Length >= 2 AndAlso fileData(0) = &H1F AndAlso fileData(1) = &H8B
+        End Function
 
-    'Private Function IsRar(fileData As Byte()) As Boolean
-    '    Return fileData.Length >= 7 AndAlso fileData(0) = &H52 AndAlso fileData(1) = &H61 AndAlso fileData(2) = &H72 AndAlso fileData(3) = &H21
-    'End Function
+        'Private Function IsRar(fileData As Byte()) As Boolean
+        '    Return fileData.Length >= 7 AndAlso fileData(0) = &H52 AndAlso fileData(1) = &H61 AndAlso fileData(2) = &H72 AndAlso fileData(3) = &H21
+        'End Function
 
-    'Private Function Is7z(fileData As Byte()) As Boolean
-    '    Return fileData.Length >= 6 AndAlso fileData(0) = &H37 AndAlso fileData(1) = &H7A AndAlso fileData(2) = &HBC AndAlso fileData(3) = &HAF
-    'End Function
+        'Private Function Is7z(fileData As Byte()) As Boolean
+        '    Return fileData.Length >= 6 AndAlso fileData(0) = &H37 AndAlso fileData(1) = &H7A AndAlso fileData(2) = &HBC AndAlso fileData(3) = &HAF
+        'End Function
 
 
-End Class
+    End Class
 
