@@ -320,15 +320,15 @@ Public Class DataImporter
         Try
             If tableName = "" Then tableName = inputTable.TableName
             Me.tableName = tableName
-            Me.fileName = fileName
+            Me.fileName = "None"
             Me.deleteExisting = deleteExisting
             Me.uniqueIdentifierColumns = uniqueIdentifierColumns
             Me.columnNames = columnNames
             Me.createIfMissing = createIfMissing
-            fileFormat = Format.odbc
+            fileFormat = Format.inputTable
 
             Return UploadTable(tableName, deleteExisting, uniqueIdentifierColumns, columnNames, createIfMissing, inputTable)
-            Return False
+
         Catch ex As Exception
             logerror(ex, "An unexpected error occurred.")
             Return False
@@ -609,15 +609,21 @@ Public Class DataImporter
 
         End If
         Dim colLst As New List(Of String)
+        ' Check the table in the database for all the cols listed in the config. Try stripping strange chars, otherwise throw an error.
         For j As Integer = 0 To editCols.Length - 1
             If editCols(j) IsNot Nothing Then
                 Dim origCol As String = editCols(j)
                 editCols(j) = editCols(j).ToLower()
                 If Not dt.Columns.Contains(editCols(j)) Then
+                    editCols(j) = editCols(j).Replace("[", "").Replace("]", "")
+                End If
+                If Not dt.Columns.Contains(editCols(j)) Then
                     editCols(j) = stripColName(editCols(j))
                 End If
                 If dt.Columns.Contains(editCols(j)) Then
                     colLst.Add(editCols(j))
+                Else
+                    logerror(New Exception("Column name not found: " + editCols(j)), "An input column was not found in the database. Check the config.")
                 End If
                 If fileFormat = Format.regex Then regexColtoGroup(editCols(j)) = origCol
             End If
