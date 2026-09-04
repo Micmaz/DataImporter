@@ -637,7 +637,7 @@ Public Class DataImporter
         updateStatus("Import in progress")
 
         Dim da As System.Data.Common.DbDataAdapter
-        da = sqlhelper.Adaptor(dt.TableName)
+        da = sqlhelper.get_Adaptor(dt.TableName)
         da.ContinueUpdateOnError = True
 
         i = -1
@@ -952,51 +952,12 @@ Public Class DataImporter
     End Function
 
     Public Function parseTypeVal(t As Type, value As Object, Optional columnName As String = "", Optional throwError As Boolean = False) As Object
-        Dim svalue = value.ToString.ToLower()
-        If blankIsNull AndAlso svalue = "" Then Return DBNull.Value
-        If value Is Nothing OrElse svalue = "null" Then
-            Return DBNull.Value
-        ElseIf value Is t Then
-            Return value
-        ElseIf t Is GetType(Boolean) Then
-            If svalue = "false" Then Return False
-            If svalue = "0" Then Return False
-            If svalue = "1" Then Return True
-            If svalue = "true" Then Return True
-            Return Boolean.Parse(value)
-        ElseIf t Is GetType(DateTime) Then
-            Dim d As DateTime
-            If DateTime.TryParse(value, d) Then
-                Return d
-            ElseIf DateTime.TryParseExact(value, dateFormats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, d) Then
-                Return d
-            Else
-                If value.ToString().Trim() = "" Then Return DBNull.Value
-                'Return DateTime.Parse(value.ToString())  'If there was a string that was not the correct date format return an error if it wasn't an empty string.
-            End If
-            'If DateTime.TryParseExact(value, New String() {"", ""}, CultureInfo.InvariantCulture, d) Then
-            '    row(colname) = d
-            'End If
-            'ElseIf t Is GetType(Decimal) Then
-            '	Return Decimal.Parse(value.ToString())
-            'ElseIf t Is GetType(Integer) Then
-            '	Return Integer.Parse(value.ToString())
-        End If
-
-        Dim out As Object
+        'Conversion rules live in the shared library (DataRowValueExtensions); this keeps
+        'only the importer policy: log the failure and return DBNull, or rethrow on demand.
         Try
-            Dim parse = t.GetMethod("Parse", New Type() {GetType(String)})
-            If parse IsNot Nothing Then
-                Return parse.Invoke(Nothing, New Object() {value.ToString()})
-            End If
-        Catch ex1 As Exception
-
-        End Try
-        Try
-            Dim Converter = TypeDescriptor.GetConverter(t)
-            Return Converter.ConvertFrom(value.ToString())
+            Return BaseClasses.DataRowValueExtensions.ParseToColumnType(t, value, blankIsNull, dateFormats, columnName)
         Catch ex As Exception
-            If (throwError) Then Throw ex
+            If throwError Then Throw
             Dim message = ""
             If columnName <> "" Then
                 message = "Error parsing column: " & columnName
@@ -1004,30 +965,19 @@ Public Class DataImporter
             logerror(ex, message)
             Return DBNull.Value
         End Try
-
-
     End Function
 
     Public Function setRowValue(row As DataRow, colname As String, value As Object) As Boolean
         Try
-            Dim checkval As Boolean = False
-            Dim initialVal As Object = Nothing
-            If row.RowState = DataRowState.Unchanged Then
-                checkval = True
-                initialVal = row(colname)
-            End If
-
-            row(colname) = parseRowVal(row, colname, value)
-
-            If checkval Then
-                If row.RowState = DataRowState.Modified Then
-                    If initialVal IsNot DBNull.Value AndAlso row(colname) IsNot DBNull.Value AndAlso initialVal = row(colname) Then
-                        row.RejectChanges()
-                    ElseIf initialVal Is DBNull.Value AndAlso row(colname) Is DBNull.Value Then
-                        row.RejectChanges()
-                    End If
-                End If
-            End If
+            'SetValue converts to the column type and only writes when the value actually
+            'changed, so an equal value never flips an Unchanged row to Modified.
+            Try
+                BaseClasses.DataRowValueExtensions.SetValue(row, colname, value, blankIsNull, dateFormats)
+            Catch ex As FormatException
+                'Unparseable value: log it and store DBNull so the import keeps going.
+                logerror(ex, "Error parsing column: " & colname)
+                BaseClasses.DataRowValueExtensions.SetValue(row, colname, Nothing, blankIsNull, dateFormats)
+            End Try
             Return True
         Catch ex As Exception
             If value Is Nothing Then value = "Null"
